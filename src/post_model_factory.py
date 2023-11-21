@@ -1,33 +1,43 @@
 from abc import ABC, abstractmethod
+from typing import *
 
 class Post(ABC):
     """Abstract class for a post"""
-    def set_post_id(self, post_id):
-        self.id = post_id
-
+    @abstractmethod
+    def set_post_id(self, post_id: int) -> None:
+        pass
 
 class FeedPost(Post):
+    # envoltorio em um padrão decorator
     """A post that is displayed in the feed"""
-    def __init__(self, title, content, author, post_id=None, comments=[], date=None):
+    def __init__(self, title: str, content: str, author: str, post_id: int = None, comments: List[str] = None, date: str = None):
         self.title = title
         self.content = content
         self.author = author
         self.id = post_id
-        self.comments = comments
+        self.comments = comments if comments else []
         self.date = date
 
+    # talvez nao seja necessario um metodo abstrato
+    def set_post_id(self, post_id: int) -> None:
+        self.id = post_id
+
 class CommentPost(Post):
+    # decorator em um padrão decorator
     """A comment in a post"""
-    def __init__(self, title, content, parent_post, post_id=None):
+    def __init__(self, title: str, content: str, parent_post: Post, post_id: int = None):
         self.title = title
         self.content = content
         self.parent_post = parent_post
         self.id = post_id
 
+    def set_post_id(self, post_id: int) -> None:
+        self.id = post_id
 
 class PostFactory:
     """Factory class for posts"""
-    def create_post(self, post_type, title, content, parent_post=None):
+    @staticmethod
+    def create_post(post_type: str, title: str, content: str, parent_post: Post = None) -> Post:
         """Create a post"""
         if post_type == 'feed':
             return FeedPost(title, content)
@@ -35,6 +45,3 @@ class PostFactory:
             return CommentPost(title, content, parent_post)
         else:
             raise ValueError(f'Post type {post_type} is not valid.')
-
-
-
