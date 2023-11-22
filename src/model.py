@@ -23,9 +23,17 @@ class BlogModel:
                 parent_post_id INTEGER REFERENCES posts(id)
             )
         ''')
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                username TEXT,
+                password TEXT,
+                email TEXT
+            )
+        ''')
 
         self.connection.commit()
-
+        
     def create_post(self, post):
         self.cursor.execute('INSERT INTO posts (title, content) VALUES (%s, %s) RETURNING id', (post.title, post.content))
         self.connection.commit()
@@ -45,3 +53,11 @@ class BlogModel:
     def get_comments_for_post(self, post):
         self.cursor.execute('SELECT * FROM comments WHERE parent_post_id = %s', (post.id,))
         return self.cursor.fetchall()
+    
+    def check_user(self, username, password):
+        self.cursor.execute('SELECT * FROM users WHERE username = %s AND password = %s', (username, password))
+        return bool(self.cursor.fetchone())
+    
+# bg = BlogModel()
+# bg.create_table()
+# bg.check_user('admin', 'admin')

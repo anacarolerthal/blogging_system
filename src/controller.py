@@ -17,8 +17,13 @@ class BlogController:
         self.view.get_posts(posts)
         cherrypy.quickstart(self.view)
 
+    def login(self):
+        username, password = self.view.login()
+        self.model.check_user(username, password)
+
+
 if __name__ == '__main__':
     db = model.BlogModel()
-    #db.create_table()
+    db.create_table()
     controller = BlogController(db, cherryView.BlogView())
     controller.show_all_posts()

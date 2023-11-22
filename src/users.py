@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import *
 from src.post_model import Post
+from model import BlogModel
 
 
 
@@ -21,7 +22,7 @@ class BaseUser(ABC):
         pass
         
     def login(self, username: str, password: str) -> bool:
-        """Login a user"""
+        """Login a user"""      
         pass
 
 class User(BaseUser):
