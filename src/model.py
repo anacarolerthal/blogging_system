@@ -7,90 +7,56 @@ class BlogModel:
     def __init__(self):
         self.connection = psycopg2.connect(DATABASE_URL)
         self.cursor = self.connection.cursor()
+        
+        #self.connection.commit()
 
-    def create_table(self):
+    # def create_user(self, user):
+    #     self.cursor.execute('INSERT INTO baseuser (username, email, passw, is_moderator) VALUES (%s, %s, %s, %s) RETURNING id', (user.username, user.email, user.password, ))
+    #     self.connection.commit()
+    #     fetched = self.cursor.fetchone()
+    #     user.set_user_id(fetched[0])
+    #     return user
 
-        #User table
-        self.cursor.execute('''
-            CREATE TABLE IF NOT EXISTS users (
-                user_id INTEGER serial PRIMARY KEY,
-                username TEXT NOT NULL,
-                password TEXT NOT NULL,
-                email TEXT NOT NULL,
-                admin BOOLEAN DEFAULT FALSE
-            )
-        ''')
-
-        #Post table
-        self.cursor.execute('''
-            CREATE TABLE IF NOT EXISTS posts (
-                post_id SERIAL PRIMARY KEY,
-                author_id INTEGER REFERENCES users(user_id),
-                date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                title TEXT NOT NULL,
-                content TEXT,
-                image TEXT,
-                parent_post_id INTEGER REFERENCES posts(id),
-                CHECK (content IS NOT NULL OR image IS NOT NULL)
-            )
-        ''')
-
-        #Tags table
-        self.cursor.execute('''
-            CREATE TABLE IF NOT EXISTS tags (
-                tag_id SERIAL PRIMARY KEY,
-                name TEXT UNIQUE NOT NULL
-            )
-        ''')
-
-        #Relation table for likes
-        self.cursor.execute('''
-            CREATE TABLE IF NOT EXISTS postLikes (
-                like_id SERIAL PRIMARY KEY,
-                post_id INTEGER REFERENCES posts(post_id),
-                user_id INTEGER REFERENCES users(user_id),
-                UNIQUE(post_id, user_id)
-            )
-        ''')
-
-        #Relation table for followers
-        self.cursor.execute('''
-            CREATE TABLE IF NOT EXISTS userFollows (
-                follow_id SERIAL PRIMARY KEY,
-                follower_id INTEGER REFERENCES users(user_id),
-                followee_id INTEGER REFERENCES users(user_id),
-                UNIQUE(follower_id, followee_id)
-            )
-        ''')
-
-        #Relation for banned users
-        self.cursor.execute('''
-            CREATE TABLE IF NOT EXISTS bannedUsers (
-                ban_id SERIAL PRIMARY KEY,
-                banner_id INTEGER REFERENCES users(user_id),
-                banned_id INTEGER REFERENCES users(user_id) UNIQUE
-            )
-        ''')
-
-        #Relation for tags and posts
-        self.cursor.execute('''
-            CREATE TABLE IF NOT EXISTS postTags (
-                tag_post_id SERIAL PRIMARY KEY,
-                tag_id INTEGER REFERENCES tags(tag_id),
-                post_id INTEGER REFERENCES posts(post_id),
-                UNIQUE(tag_id, post_id)
-            )
-        ''')
-
-        # create a new user
-        self.cursor.execute('INSERT INTO users (name, email, password, admin) VALUES (%s, %s, %s, %s)', ('admin', 'admin', 'admin', True))
-
+    def create_post(self, post):
+        self.cursor.execute('INSERT INTO post (title, text_content, image, author_id) VALUES (%s, %s, %s, %s) RETURNING id, creation_date', (post.title, post.content, post.image, post.author_id))
         self.connection.commit()
+        fetched = self.cursor.fetchone()
+        post.set_post_id(fetched[0])
+        post.set_post_date(fetched[1])
+        return post
 
-    def create_post(self, title, content):
-        self.cursor.execute('INSERT INTO posts (title, content) VALUES (?, ?)', (title, content))
-        self.connection.commit()
+    def create_reply(self, reply):
+        self.cursor.execute('INSERT INTO reply (text_content, image, author_id, parent_post_id) VALUES (%s, %s, %s, %s) RETURNING id, creation_date', (comment.content, comment.image, comment.author_id, comment.parent_post_id))
+        fetched = self.cursor.fetchone()
+        reply.set_post_id(fetched[0])
+        reply.set_post_date(fetched[1])
+        return reply
 
     def get_all_posts(self):
-        self.cursor.execute('SELECT * FROM posts')
+        self.cursor.execute('SELECT * FROM post')
         return self.cursor.fetchall()
+
+    def get_n_posts(self, n, offset=0):
+        self.cursor.execute('SELECT * FROM post LIMIT %s OFFSET %s', (n, offset))
+        return self.cursor.fetchall()
+
+    def get_replies_for_post(self, post):
+        self.cursor.execute('SELECT * FROM reply WHERE parent_post_id = %s', (post.id))
+        return self.cursor.fetchall()
+    
+    def check_user(self, username, password):
+        self.cursor.execute('SELECT * FROM baseuser WHERE username = %s AND password = %s', (username, password))
+        return bool(self.cursor.fetchone())
+    
+    def add_user(self, username, password, email):
+        self.cursor.execute('INSERT INTO baseuser (username, password, email, is_moderator) VALUES (%s, %s, %s, %s)', (username, password, email, 0))
+        self.connection.commit()
+        
+    def add_moderator(self, username, password, email):
+        self.cursor.execute('INSERT INTO baseuser (username, password, email, is_moderator) VALUES (%s, %s, %s, %s)', (username, password, email, 1))
+        self.connection.commit()
+
+bg = BlogModel()
+#bg.drop_table()
+bg.create_table()
+bg.check_user('admin', 'admin')

@@ -28,6 +28,10 @@ class BlogController:
     def login(self):
         username, password = self.view.login()
         self.model.check_user(username, password)
+        
+    def register(self):
+        username, password, email = self.view.register()
+        self.model.create_user(username, password, email)
 
     def print_a(self):
         print('a')
