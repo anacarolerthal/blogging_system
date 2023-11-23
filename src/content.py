@@ -11,47 +11,52 @@ class BaseContent(ABC):
     image: str
 
     @abstractmethod
-    def publish(self):
+    def publish(self) -> None:
         """Publish a content"""
 
-    def delete(self):
+    def delete(self) -> None:
         """Delete a content on database"""
 
-    def render(self):
+    def render(self) -> str:
         """Render a content on screen"""
 
 class Post(BaseContent):
     """A post that is displayed in the feed"""
     def __init__(self,
-                 author_id,
-                 date,
-                 title,
-                 content = None,
-                 image = None):
-        self.id = None,
+                 author_id: int,
+                 title: str,
+                 id: int = None,
+                 date: str = None,
+                 content: str = None,
+                 image: str = None):
+        self.id = id,
         self.author_id = author_id,
         self.date = date
         self.title = title,
         self.content = content,
         self.image = image
 
-    def publish(self):
+    def publish(self) -> None:
         return BlogModel.create_post(self)
     
-    def delete(self):
+    def delete(self) -> None:
         return super().delete()
     
-    def render(self):
-        return super().render()
+    def render(self) -> str:
+        display = f"""
+            -----{self.title}------- \n
+            {self.content}
+        """
+        return display
         
-class Comment(BaseContent):
+class Reply(BaseContent):
     """A comment in a post"""
     def __init__(self,
-                 author_id,
-                 date,
-                 parent_post_id,
-                 content = None,
-                 image = None):
+                 author_id: int,
+                 parent_post_id: int,
+                 date: str = None,
+                 content: str = None,
+                 image: str = None):
         self.id = None,
         self.author_id = author_id,
         self.date = date,
@@ -59,25 +64,33 @@ class Comment(BaseContent):
         self.content = content,
         self.image = image
 
-    def publish(self):
-        return BlogModel.create_comment(self)
+    def publish(self) -> None:
+        return BlogModel.create_reply(self)
     
-    def delete(self):
+    def delete(self) -> None:
         return super().delete()
     
-    def render(self):
-        return super().render()
+    def render(self) -> str:
+        display = f"""
+        {self.content}
+        """
+        return display
     
 #Simple Factory
-class ContentFactory:
-    @staticmethod
-    def get_content(type_: str) -> BaseContent:
-        if type_ == "POST":
-            return Post()
-        if type_ == "COMMENT":
-            return Comment()
-        else:
-            raise ValueError(f"Content type {type_} not found")
+# class ContentFactory:
+#     @staticmethod
+#     def get_content(type_: str, args) -> BaseContent:
+#         if type_ == "POST":
+#             return Post(args.author_id,
+#                         args.title,
+#                         args.content,
+#                         args.image,
+#                         )
+#         if type_ == "REPLY":
+#             return Reply(args)
+#         else:
+#             raise ValueError(f"Content type {type_} not found")
+
 
 
 

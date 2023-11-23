@@ -16,7 +16,7 @@ class BlogController:
         self.model.create_user(name, email)
 
     def show_page_n(self, page_num):
-        posts = self.model.get_n_posts(20,offset=page_num)
+        posts = self.ContentModel.get_n_posts(20,offset=page_num)
         self.view.get_posts(posts)
         cherrypy.quickstart(self.view)
 
@@ -28,7 +28,7 @@ class BlogController:
     def login(self):
         username, password = self.view.login()
         self.model.check_user(username, password)
-        
+
     def register(self):
         username, password, email = self.view.register()
         self.model.create_user(username, password, email)
