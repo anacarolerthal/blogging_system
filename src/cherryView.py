@@ -1,5 +1,8 @@
 import cherrypy
 from admin import Admin
+from content import Post
+from model import BlogModel
+import utils
 
 # read base_html file
 with open('html/base_html.html', 'r') as f:
@@ -7,7 +10,13 @@ with open('html/base_html.html', 'r') as f:
 
 
 def post_to_html(posts):
-    content = ''
+    content = """
+    <form method="post" action="create_post">
+        <input type="text" name="title" placeholder="Sobre o que voce quer falar?">
+        <input type="text" name="content" placeholder="Disserte sobre o assunto">
+        <input type="submit" value="Postar">
+    </form>    
+    """
     for post in posts:
         content += f'''
     <div class="blog-post">
@@ -61,20 +70,32 @@ def register():
 class BlogView(object):
     def __init__(self):
         self.posts = []
-
-
-    def get_posts(self, posts):
-        self.posts = posts
-
+        self.model = BlogModel()
 
     @cherrypy.expose
     def index(self):
         return login()
 
-
     @cherrypy.expose
     def main_page(self):
+        posts = [utils.transformPostDataToObject(post) for post in self.model.get_all_posts()]
+        posts.reverse()
+        self.posts = posts
         return post_to_html(self.posts)
+    
+    @cherrypy.expose
+    def create_post(self, title, content):
+        """
+        Create a post and return to the all posts page
+        """
+        post = Post(
+            author_id=user_id,
+            title=title,
+            content=content
+        )
+
+        id = post.publish()
+        return self.main_page()
 
 
     @cherrypy.expose
@@ -85,6 +106,8 @@ class BlogView(object):
         admin = Admin()
         if admin.authenticate(username, password):
             # Authentication successful, render the main page
+            global user_id
+            user_id = admin.getId(username)
             return self.main_page()
         else:
             # Authentication failed, display an error message on the login page
@@ -122,4 +145,3 @@ class BlogView(object):
     @cherrypy.expose
     def print_a(self):
         print('a')
-

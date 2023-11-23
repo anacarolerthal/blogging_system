@@ -64,6 +64,10 @@ class BlogModel:
         self.cursor.execute('SELECT * FROM baseuser WHERE username = %s AND passw = %s', (username, password))
         return bool(self.cursor.fetchone())
     
+    def get_user_id_by_username(self, username):
+        self.cursor.execute('SELECT id FROM baseuser WHERE username = %s', (username, ))
+        return self.cursor.fetchone()
+    
     def add_user(self, username, password, email):
         self.cursor.execute('INSERT INTO baseuser (username, passw, email, is_moderator) VALUES (%s, %s, %s, %s)', (username, password, email, False))
         self.connection.commit()

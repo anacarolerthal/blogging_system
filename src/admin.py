@@ -19,3 +19,9 @@ class Admin:
         email: str -> email of the user
         """
         user_model.add_user(username, password, email)
+
+    def getId(self, username: str):
+        """
+        Get id from a username
+        """
+        return user_model.get_user_id_by_username(username)

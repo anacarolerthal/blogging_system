@@ -22,8 +22,6 @@ class BlogController:
         cherrypy.quickstart(self.view)
 
     def show_all_posts(self):
-        posts = [utils.transformPostDataToObject(post) for post in self.model.get_all_posts()]
-        self.view.get_posts(posts)
         cherrypy.quickstart(self.view)
 
     def login(self):

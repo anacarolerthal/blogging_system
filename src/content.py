@@ -36,8 +36,9 @@ class Post(BaseContent):
         self.content = content
         self.image = image
 
-    def publish(self) -> None:
-        return BlogModel.create_post(self)
+    def publish(self):
+        id = BlogModel().create_post(self)
+        return id
     
     def delete(self) -> None:
         return super().delete()
