@@ -122,3 +122,4 @@ class BlogView(object):
     @cherrypy.expose
     def print_a(self):
         print('a')
+
