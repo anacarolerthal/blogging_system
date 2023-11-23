@@ -31,6 +31,8 @@ class BlogModel:
     def __init__(self):
         self.connection = DBConnection.Instance().connection
         self.cursor = self.connection.cursor()
+        
+        #self.connection.commit()
 
     def create_post(self, post):
         self.cursor.execute('INSERT INTO Post (author_id, title, text_content, image) VALUES (%s, %s, %s, %s) RETURNING id', 
@@ -65,4 +67,3 @@ class BlogModel:
     def add_user(self, username, password, email):
         self.cursor.execute('INSERT INTO baseuser (username, passw, email, is_moderator) VALUES (%s, %s, %s, %s)', (username, password, email, False))
         self.connection.commit()
-    

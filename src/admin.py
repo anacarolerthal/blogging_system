@@ -1,4 +1,5 @@
 import model
+
 user_model = model.BlogModel()
 
 class Admin:

@@ -6,7 +6,6 @@
 #     model = BlogModel()
 #     view = BlogView()
 #     controller = BlogController(model, view)
-
 #     # Create a new post
 #     controller.create_post("Title 1", "Content of post 1")
 
