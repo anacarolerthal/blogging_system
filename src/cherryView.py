@@ -11,14 +11,14 @@ def post_to_html(posts):
     for post in posts:
         content += f'''
     <div class="blog-post">
-        <div class="blog-post-title">{post[1]}</div>
+        <div class="blog-post-title">{post.title}</div>
         <div class="blog-post-content">
-            <p>{post[2]}</p>
+            <p>{post.content}</p>
             <p>More content goes here...</p>
         </div>
         <div class="blog-post-meta">
-            <span>Author: John Doe</span> |
-            <span>Date: November 20, 2023</span>
+            <span>Author: {post.author_id}</span> |
+            <span>Date: {post.date}</span>
         </div>
     </div>
 </body>
