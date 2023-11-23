@@ -1,6 +1,6 @@
 import model
 import cherryView
-import post_model
+import content
 import cherrypy
 
 class BlogController:
@@ -16,7 +16,7 @@ class BlogController:
         self.model.create_user(name, email)
 
     def show_page_n(self, page_num):
-        posts = self.model.get_n_posts(20,offset=page_num)
+        posts = self.ContentModel.get_n_posts(20,offset=page_num)
         self.view.get_posts(posts)
         cherrypy.quickstart(self.view)
 
@@ -34,6 +34,5 @@ class BlogController:
 
 if __name__ == '__main__':
     db = model.BlogModel()
-    db.create_table()
     controller = BlogController(db, cherryView.BlogView())
     controller.show_all_posts()

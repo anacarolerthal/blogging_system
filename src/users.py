@@ -1,9 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import *
-from src.post_model import Post
+from content import Post
 from model import BlogModel
-
-
 
 class BaseUser(ABC):
     """Abstract class for a user"""

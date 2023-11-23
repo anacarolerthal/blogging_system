@@ -1,77 +1,10 @@
 import cherrypy
-# import model
-import re
-import authenticate
-#db = model.BlogModel()
+from admin import Admin
 
+# read base_html file
+with open('html/base_html.html', 'r') as f:
+    base_html = f.read()
 
-base_html = '''
-<!DOCTYPE html>
-<html>
-<head>
-    <style>
-        body {
-            font-family: sans-serif;
-        }
-        h1 {
-            text-align: center;
-        }
-        .blog-post {
-            background-color: #fff;
-            border: 1px solid #ddd;
-            border-radis: 8px;
-            margin: 20px;
-            padding: 20px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .blog-post-title {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: #333;
-        }
-
-        .blog-post-content {
-            margin-top: 10px;
-            color: #666;
-        }
-
-        .blog-post-meta {
-            margin-top: 15px;
-            color: #888;
-        }
-    </style>
-
-    <script>
-    // Function to check if the user has scrolled to the bottom
-    function isScrolledToBottom() {
-      const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
-      const scrollHeight = document.documentElement.scrollHeight || document.body.scrollHeight;
-      const clientHeight = document.documentElement.clientHeight || document.body.clientHeight;
-      return scrollTop + clientHeight >= scrollHeight;
-    }
-
-    
-
-    // Event listener for scrolling
-    window.addEventListener('scroll', function () {
-      if (isScrolledToBottom()) {
-        alert('You scrolled to the bottom!');
-        window.location.href = "http://localhost:8080/print_a";
-        //window.location.href = "http://localhost:8080/page2";
-
-      }
-    });
-    </script>
-
-    <title>Bloggster</title>
-</head>
-<body>
-    <h1>Bloggster</h1>
-
-</body>
-</html>
-'''
 
 def post_to_html(posts):
     content = ''
@@ -90,10 +23,10 @@ def post_to_html(posts):
     </div>
 </body>
 </html>
-        '''
-
+'''
     return base_html.replace('''</body>
 </html>''', content)
+
 
 def login():
     content = '''
@@ -102,32 +35,55 @@ def login():
         <input type="password" name="password" placeholder="Password">
         <input type="submit" value="Login">
     </form>
-
+    Se você não tem uma conta, <a href="registering">registre-se</a>.
+    </body>
+</html>
+    '''
+    return base_html.replace('''</body>
+</html>''', content)
+    
+    
+def register():
+    content = '''
+    <form method="post" action="is_registered">
+        <input type="text" name="username" placeholder="Username">
+        <input type="password" name="password" placeholder="Password">
+        <input type="email" name="email" placeholder="Email">
+        <input type="submit" value="Register">
+    </form>
     </body>
 </html>
     '''
     return base_html.replace('''</body>
 </html>''', content)
 
+
 class BlogView(object):
     def __init__(self):
         self.posts = []
 
+
     def get_posts(self, posts):
         self.posts = posts
 
+
     @cherrypy.expose
     def index(self):
-        html = login()
-        return html
+        return login()
+
 
     @cherrypy.expose
     def main_page(self):
         return post_to_html(self.posts)
 
+
     @cherrypy.expose
     def is_authenticated(self, username=None, password=None):
-        if authenticate.authenticate(username, password):
+        '''
+        Function that authenticates a user
+        '''
+        admin = Admin()
+        if admin.authenticate(username, password):
             # Authentication successful, render the main page
             return self.main_page()
         else:
@@ -136,8 +92,33 @@ class BlogView(object):
             login_form = login() + f'<p style="color: red;">{error_message}</p>'
             return login_form
         
+        
+    @cherrypy.expose
+    def registering(self):
+        '''
+        Function that renders the registration page
+        '''
+        return register()
+        
+        
+    @cherrypy.expose
+    def is_registered(self, username=None, password=None, email=None):
+        '''
+        Function that registers a user
+        '''
+        admin = Admin()
+        print(admin.authenticate(username, password))
+        if not admin.authenticate(username, password):
+            admin.register(username, password, email)
+            # redirect to login page
+            return login() + '<p style="color: green;">Registrado com sucesso! Faça login.</p>'
+        else:
+            # Registration failed, display an error message on the registration page
+            error_message = "Nome de usuário em uso. Por favor, tente novamente."
+            register_form = register() + f'<p style="color: red;">{error_message}</p>'
+            return register_form
+        
+        
     @cherrypy.expose
     def print_a(self):
         print('a')
-    
-    #make a multipage feed
