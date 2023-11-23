@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import *
+
 from src.content import Post
 #from model import BlogModel
 
@@ -77,7 +78,7 @@ class User(BaseUser):
 
     def post(self, post: Post) -> None:
         """Post a post"""
-        pass   
+        pass  
 
     def delete_post(self, post_id: int) -> None:
         """Delete a post"""
@@ -122,7 +123,7 @@ class Moderator(BaseUser):
     def ban_user(self, user_id: int) -> None:
         """Ban a user"""
         pass
-
+      
     def unban_user(self, user_id: int) -> None:
         """Unban a user"""
         pass
@@ -138,3 +139,4 @@ class UserFactory:
             return Moderator()
         else:
             raise ValueError(f'User type {type_} is not valid.')
+            

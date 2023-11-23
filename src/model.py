@@ -1,62 +1,69 @@
 #Data Layer - conexao com o banco
-import psycopg2 
+import psycopg2
 
+#def
 DATABASE_URL = "postgres://wxishrvi:2bKsBjBn5-hrqFKFb79grU1Kl71n9ext@isabelle.db.elephantsql.com/wxishrvi"
+
+#singleton to ensure just one connection
+class Singleton:
+    def __init__(self, cls):
+        self._cls = cls
+
+    def Instance(self):
+        try:
+            return self._instance
+        except AttributeError:
+            self._instance = self._cls()
+            return self._instance
+
+    def __call__(self):
+        raise TypeError('Singletons must be accessed through `Instance()`.')
+
+    def __instancecheck__(self, inst):
+        return isinstance(inst, self._cls)
+    
+@Singleton
+class DBConnection():
+    def __init__(self):
+        self.connection = psycopg2.connect(DATABASE_URL)
 
 class BlogModel:
     def __init__(self):
-        self.connection = psycopg2.connect(DATABASE_URL)
+        self.connection = DBConnection.Instance().connection
         self.cursor = self.connection.cursor()
         
         #self.connection.commit()
 
-    # def create_user(self, user):
-    #     self.cursor.execute('INSERT INTO baseuser (username, email, passw, is_moderator) VALUES (%s, %s, %s, %s) RETURNING id', (user.username, user.email, user.password, ))
-    #     self.connection.commit()
-    #     fetched = self.cursor.fetchone()
-    #     user.set_user_id(fetched[0])
-    #     return user
-
     def create_post(self, post):
-        self.cursor.execute('INSERT INTO post (title, text_content, image, author_id) VALUES (%s, %s, %s, %s) RETURNING id, creation_date', (post.title, post.content, post.image, post.author_id))
+        self.cursor.execute('INSERT INTO Post (author_id, title, text_content, image) VALUES (%s, %s, %s, %s) RETURNING id', 
+                            (post.author_id, post.title, post.content, post.image))
+        id = self.cursor.fetchone()[0]
         self.connection.commit()
-        fetched = self.cursor.fetchone()
-        post.set_post_id(fetched[0])
-        post.set_post_date(fetched[1])
-        return post
+        return id
 
     def create_reply(self, reply):
-        self.cursor.execute('INSERT INTO reply (text_content, image, author_id, parent_post_id) VALUES (%s, %s, %s, %s) RETURNING id, creation_date', (comment.content, comment.image, comment.author_id, comment.parent_post_id))
-        fetched = self.cursor.fetchone()
-        reply.set_post_id(fetched[0])
-        reply.set_post_date(fetched[1])
-        return reply
-
+        self.cursor.execute('INSERT INTO Reply (author_id, text_content, image, parent_post_id) VALUES (%s, %s, %s, %s) RETURNING id', 
+                            (reply.author_id, reply.content, reply.image, reply.parent_post_id))
+        id = self.cursos.fetchone()[0]
+        self.connection.commit()
+        return None
+    
     def get_all_posts(self):
-        self.cursor.execute('SELECT * FROM post')
-        return self.cursor.fetchall()
-
-    def get_n_posts(self, n, offset=0):
-        self.cursor.execute('SELECT * FROM post LIMIT %s OFFSET %s', (n, offset))
-        return self.cursor.fetchall()
-
-    def get_replies_for_post(self, post):
-        self.cursor.execute('SELECT * FROM reply WHERE parent_post_id = %s', (post.id))
+        self.cursor.execute('SELECT * FROM Post')
         return self.cursor.fetchall()
     
+    def get_n_posts(self, n, offset=0):
+        self.cursor.execute('SELECT * FROM Post LIMIT %s OFFSET %s', (n, offset))
+        return self.cursor.fetchall()
+
+    def get_comments_for_post(self, post):
+        self.cursor.execute('SELECT * FROM comments WHERE parent_post_id = %s', (post.id,))
+        return self.cursor.fetchall()
+
     def check_user(self, username, password):
-        self.cursor.execute('SELECT * FROM baseuser WHERE username = %s AND password = %s', (username, password))
+        self.cursor.execute('SELECT * FROM baseuser WHERE username = %s AND passw = %s', (username, password))
         return bool(self.cursor.fetchone())
     
     def add_user(self, username, password, email):
-        self.cursor.execute('INSERT INTO baseuser (username, password, email, is_moderator) VALUES (%s, %s, %s, %s)', (username, password, email, 0))
+        self.cursor.execute('INSERT INTO baseuser (username, passw, email, is_moderator) VALUES (%s, %s, %s, %s)', (username, password, email, False))
         self.connection.commit()
-        
-    def add_moderator(self, username, password, email):
-        self.cursor.execute('INSERT INTO baseuser (username, password, email, is_moderator) VALUES (%s, %s, %s, %s)', (username, password, email, 1))
-        self.connection.commit()
-
-bg = BlogModel()
-#bg.drop_table()
-bg.create_table()
-bg.check_user('admin', 'admin')

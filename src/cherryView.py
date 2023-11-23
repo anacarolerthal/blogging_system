@@ -11,14 +11,14 @@ def post_to_html(posts):
     for post in posts:
         content += f'''
     <div class="blog-post">
-        <div class="blog-post-title">{post[1]}</div>
+        <div class="blog-post-title">{post.title}</div>
         <div class="blog-post-content">
-            <p>{post[2]}</p>
+            <p>{post.content}</p>
             <p>More content goes here...</p>
         </div>
         <div class="blog-post-meta">
-            <span>Author: John Doe</span> |
-            <span>Date: November 20, 2023</span>
+            <span>Author: {post.author_id}</span> |
+            <span>Date: {post.date}</span>
         </div>
     </div>
 </body>
@@ -69,8 +69,7 @@ class BlogView(object):
 
     @cherrypy.expose
     def index(self):
-        html = login()
-        return html
+        return login()
 
 
     @cherrypy.expose
@@ -108,13 +107,14 @@ class BlogView(object):
         Function that registers a user
         '''
         admin = Admin()
+        print(admin.authenticate(username, password))
         if not admin.authenticate(username, password):
             admin.register(username, password, email)
             # redirect to login page
-            return login()
+            return login() + '<p style="color: green;">Registrado com sucesso! Faça login.</p>'
         else:
             # Registration failed, display an error message on the registration page
-            error_message = "Username already in use. Please try again."
+            error_message = "Nome de usuário em uso. Por favor, tente novamente."
             register_form = register() + f'<p style="color: red;">{error_message}</p>'
             return register_form
         
@@ -122,3 +122,4 @@ class BlogView(object):
     @cherrypy.expose
     def print_a(self):
         print('a')
+
