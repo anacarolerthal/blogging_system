@@ -26,7 +26,7 @@ class BlogModel:
         return post
 
     def create_reply(self, reply):
-        self.cursor.execute('INSERT INTO reply (text_content, image, author_id, parent_post_id) VALUES (%s, %s, %s, %s) RETURNING id, creation_date', (comment.content, comment.image, comment.author_id, comment.parent_post_id))
+        self.cursor.execute('INSERT INTO reply (text_content, image, author_id, parent_post_id) VALUES (%s, %s, %s, %s) RETURNING id, creation_date', (reply.content, reply.image, reply.author_id, reply.parent_post_id))
         fetched = self.cursor.fetchone()
         reply.set_post_id(fetched[0])
         reply.set_post_date(fetched[1])
@@ -45,18 +45,9 @@ class BlogModel:
         return self.cursor.fetchall()
     
     def check_user(self, username, password):
-        self.cursor.execute('SELECT * FROM baseuser WHERE username = %s AND password = %s', (username, password))
+        self.cursor.execute('SELECT * FROM baseuser WHERE username = %s AND passw = %s', (username, password))
         return bool(self.cursor.fetchone())
     
     def add_user(self, username, password, email):
-        self.cursor.execute('INSERT INTO baseuser (username, password, email, is_moderator) VALUES (%s, %s, %s, %s)', (username, password, email, 0))
+        self.cursor.execute('INSERT INTO baseuser (username, passw, email, is_moderator) VALUES (%s, %s, %s, %s)', (username, password, email, False))
         self.connection.commit()
-        
-    def add_moderator(self, username, password, email):
-        self.cursor.execute('INSERT INTO baseuser (username, password, email, is_moderator) VALUES (%s, %s, %s, %s)', (username, password, email, 1))
-        self.connection.commit()
-
-bg = BlogModel()
-#bg.drop_table()
-bg.create_table()
-bg.check_user('admin', 'admin')

@@ -38,6 +38,5 @@ class BlogController:
 
 if __name__ == '__main__':
     db = model.BlogModel()
-    db.create_table()
     controller = BlogController(db, cherryView.BlogView())
     controller.show_all_posts()
