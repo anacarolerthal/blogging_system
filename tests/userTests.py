@@ -4,7 +4,7 @@ import sys
 
 sys.path.append('../')
 from src.users import User, Moderator, UserFactory
-from src.posts import Post
+from src.content import Post
 
 #User creation
 class TestUserSystem(unittest.TestCase):
@@ -20,19 +20,19 @@ class TestUserSystem(unittest.TestCase):
 
     def test_user_get_following(self):
         self.assertIsInstance(self.user.get_following(), list)
-    
+
     def test_user_get_followers(self):
         self.assertIsInstance(self.user.get_followers(), list)
-    
+
     def test_user_get_username(self):
         self.assertIsInstance(self.user.get_username(), str)
-    
+
     def test_user_get_email(self):
         self.assertIsInstance(self.user.get_email(), str)
-    
+
     def test_user_get_id(self):
         self.assertIsInstance(self.user.get_id(), int)
-    
+
     def test_user_get_type(self):
         self.assertIsInstance(self.user.get_type(), str)
 
@@ -47,7 +47,7 @@ class TestUserSystem(unittest.TestCase):
         post = None
         #Assert if error "InvalidPost" is raised
         self.assertRaises(self.user.post(post), "InvalidFunctionArguments")
-        
+
     def test_user_deleting(self):
         postId = 1
         authorId = self.user.get_id()
@@ -89,7 +89,7 @@ class TestUserSystem(unittest.TestCase):
         self.user.unfollow(self.user.get_id())
         #Assert if error "CannotUnfollowSelf" is raised
         self.assertRaises(self.user.follow(self.user.get_id()), "CannotUnfollowSelf")     
-    
+
     def test_user_follow_already_following(self):
         other_user_id = 2
         self.user.follow(other_user_id)
@@ -123,7 +123,7 @@ class TestUserSystem(unittest.TestCase):
         self.assertRaises(self.user.unfollow(other_user_id), "InvalidFunctionArguments")
 
     # TESTING MODERATOR INTERACTION
-    
+
     def test_moderator_delete_post(self):
         postId = 1
         authorId = self.user.get_id()
@@ -135,7 +135,7 @@ class TestUserSystem(unittest.TestCase):
         post = None
         #Assert if error "InvalidPost" is raised
         self.assertRaises(self.moderator.delete_post(post), "InvalidPost")
-    
+
     def test_moderator_ban_user(self):
         userId = 1
         self.moderator.ban_user(userId)
@@ -145,7 +145,7 @@ class TestUserSystem(unittest.TestCase):
         userId = 100
         #Assert if error "InvalidUser" is raised
         self.assertRaises(self.moderator.ban_user(userId), "UserNotInDatabase")
-    
+
     def test_moderator_unban_user(self):
         userId = 1
         self.moderator.unban_user(userId)
@@ -172,7 +172,7 @@ class TestUserSystem(unittest.TestCase):
         #Assert if error "CannotBanModerator" is raised
         self.assertRaises(self.moderator.ban_user(userId), "CannotBanModerator")
 
-    
+
 
     def test_user_factory_create_user(self):
         created_user = self.user_factory.create_user("user", "user2", "pass2", "user2@example.com")
