@@ -1,10 +1,10 @@
 from model import BlogModel
-from view import BlogView
 from controller import BlogController
+import cherryView
 
 if __name__ == "__main__":
     model = BlogModel()
-    view = BlogView()
+    view = cherryView.BlogView()
     controller = BlogController(model, view)
 
     # Create a new post

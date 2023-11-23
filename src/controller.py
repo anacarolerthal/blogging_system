@@ -1,11 +1,39 @@
-class BlogController:
-    def __init__(self, model, view):
-        self.model = model
-        self.view = view
+import model
+import cherryView
+import content
+import cherrypy
 
-    def create_post(self, title, content):
-        self.model.create_post(title, content)
+class BlogController:
+    def __init__(self, model, view_model):
+        self.model = model
+        self.view = view_model
+        # self.post_factory = post_model.PostFactory()
+
+    def create_post(self, post):
+        self.model.create_post(post)
+
+    def create_user(self, name, email):
+        self.model.create_user(name, email)
+
+    def show_page_n(self, page_num):
+        posts = self.model.get_n_posts(20,offset=page_num)
+        self.view.get_posts(posts)
+        cherrypy.quickstart(self.view)
 
     def show_all_posts(self):
         posts = self.model.get_all_posts()
-        self.view.show_all_posts(posts)
+        self.view.get_posts(posts)
+        cherrypy.quickstart(self.view)
+
+    def login(self):
+        username, password = self.view.login()
+        self.model.check_user(username, password)
+
+    def print_a(self):
+        print('a')
+
+if __name__ == '__main__':
+    db = model.BlogModel()
+    db.create_table()
+    controller = BlogController(db, cherryView.BlogView())
+    controller.show_all_posts()
