@@ -44,9 +44,9 @@ class BlogModel:
     def create_reply(self, reply):
         self.cursor.execute('INSERT INTO Reply (author_id, text_content, image, parent_post_id) VALUES (%s, %s, %s, %s) RETURNING id', 
                             (reply.author_id, reply.content, reply.image, reply.parent_post_id))
-        id = self.cursos.fetchone()[0]
+        id = self.cursor.fetchone()[0]
         self.connection.commit()
-        return None
+        return id
     
     def get_all_posts(self):
         self.cursor.execute('SELECT * FROM Post')
@@ -56,8 +56,8 @@ class BlogModel:
         self.cursor.execute('SELECT * FROM Post LIMIT %s OFFSET %s', (n, offset))
         return self.cursor.fetchall()
 
-    def get_comments_for_post(self, post):
-        self.cursor.execute('SELECT * FROM comments WHERE parent_post_id = %s', (post.id,))
+    def get_comments_for_post(self, postId):
+        self.cursor.execute('SELECT * FROM Reply WHERE parent_post_id = %s', (postId,))
         return self.cursor.fetchall()
 
     def check_user(self, username, password):

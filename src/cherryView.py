@@ -1,8 +1,9 @@
 import cherrypy
 from admin import Admin
-from content import Post
+from content import Post, Reply
 from model import BlogModel
 import utils
+import re
 
 # read base_html file
 with open('html/base_html.html', 'r') as f:
@@ -29,6 +30,34 @@ def post_to_html(posts):
             <span>Author: {post.author_id}</span> |
             <span>Date: {post.date}</span>
         </div>
+        <div class="blog-post-do-comment">
+            <form method="post" action="do_comment">
+                <input type="hidden" name="post_id" value={post.id}>
+                <input type="text" name="content" placeholder="Comente sobre">
+                <input type="submit" value="Comentar">
+            </form>
+        </div>
+        <div class="blog-post-comments">
+            Veja os <a href="get_post_comments/postId={post.id}">comentarios</a>
+        </div>
+    </div>
+</body>
+</html>
+'''
+    return base_html.replace('''</body>
+</html>''', content)
+
+def comments_to_html(comments):
+    content = ''
+    for comment in comments:
+        content += f'''
+        <div class="comment-meta">
+            <span>Author: {comment.author_id}</span> |
+            <span>Date: {comment.date}</span>
+        </div>
+    <div class="comment">
+        <div class="comment-content">
+            <p>{comment.content}</p>
     </div>
 </body>
 </html>
@@ -71,6 +100,7 @@ class BlogView(object):
     def __init__(self):
         self.posts = []
         self.model = BlogModel()
+        self.user_id = None
 
     @cherrypy.expose
     def index(self):
@@ -89,7 +119,7 @@ class BlogView(object):
         Create a post and return to the all posts page
         """
         post = Post(
-            author_id=user_id,
+            author_id=self.user_id,
             title=title,
             content=content
         )
@@ -106,8 +136,7 @@ class BlogView(object):
         admin = Admin()
         if admin.authenticate(username, password):
             # Authentication successful, render the main page
-            global user_id
-            user_id = admin.getId(username)
+            self.user_id = admin.getId(username)
             return self.main_page()
         else:
             # Authentication failed, display an error message on the login page
@@ -122,7 +151,30 @@ class BlogView(object):
         Function that renders the registration page
         '''
         return register()
-        
+    
+    @cherrypy.expose
+    def do_comment(self, content, post_id):
+        reply = Reply(
+            author_id=self.user_id,
+            content=content,
+            parent_post_id=post_id
+        )
+        query_string = "postId="+post_id
+        id = reply.publish()
+        return self.get_post_comments(query_string)
+
+    @cherrypy.expose
+    def get_post_comments(self, postId):
+        pattern = r'(?<==)([^=\s]+)' #The "postId" parameter is in the format "postId=8", so use regex to extract the 8
+        matches = re.findall(pattern, postId)
+        id = int(matches[0])
+        comments = self.model.get_comments_for_post(id)
+        if comments is not None:
+            comments = [utils.transformReplyDataToObject(reply) for reply in comments]
+            comments.reverse()
+            return comments_to_html(comments)  
+        else:
+            return "Nao ha comentarios"
         
     @cherrypy.expose
     def is_registered(self, username=None, password=None, email=None):

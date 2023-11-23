@@ -21,7 +21,7 @@ class BlogController:
         self.view.get_posts(posts)
         cherrypy.quickstart(self.view)
 
-    def show_all_posts(self):
+    def start(self):
         cherrypy.quickstart(self.view)
 
     def login(self):
@@ -38,4 +38,4 @@ class BlogController:
 if __name__ == '__main__':
     db = model.BlogModel()
     controller = BlogController(db, cherryView.BlogView())
-    controller.show_all_posts()
+    controller.start()

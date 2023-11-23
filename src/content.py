@@ -55,6 +55,7 @@ class Reply(BaseContent):
     def __init__(self,
                  author_id: int,
                  parent_post_id: int,
+                 id: int = None,
                  date: str = None,
                  content: str = None,
                  image: str = None):
@@ -66,7 +67,7 @@ class Reply(BaseContent):
         self.image = image
 
     def publish(self) -> None:
-        return BlogModel.create_reply(self)
+        return BlogModel().create_reply(self)
     
     def delete(self) -> None:
         return super().delete()
