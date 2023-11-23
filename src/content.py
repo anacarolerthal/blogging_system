@@ -29,11 +29,11 @@ class Post(BaseContent):
                  date: str = None,
                  content: str = None,
                  image: str = None):
-        self.id = id,
-        self.author_id = author_id,
+        self.id = id
+        self.author_id = author_id
         self.date = date
-        self.title = title,
-        self.content = content,
+        self.title = title
+        self.content = content
         self.image = image
 
     def publish(self) -> None:
@@ -57,11 +57,11 @@ class Reply(BaseContent):
                  date: str = None,
                  content: str = None,
                  image: str = None):
-        self.id = None,
-        self.author_id = author_id,
-        self.date = date,
+        self.id = None
+        self.author_id = author_id
+        self.date = date
         self.parent_post_id = parent_post_id
-        self.content = content,
+        self.content = content
         self.image = image
 
     def publish(self) -> None:

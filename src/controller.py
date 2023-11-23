@@ -2,6 +2,7 @@ import model
 import cherryView
 import content
 import cherrypy
+import utils
 
 class BlogController:
     def __init__(self, model, view_model):
@@ -21,7 +22,7 @@ class BlogController:
         cherrypy.quickstart(self.view)
 
     def show_all_posts(self):
-        posts = self.model.get_all_posts()
+        posts = [utils.transformPostDataToObject(post) for post in self.model.get_all_posts()]
         self.view.get_posts(posts)
         cherrypy.quickstart(self.view)
 
