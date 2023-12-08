@@ -38,9 +38,9 @@ class TestReplySystem(unittest.TestCase):
         # assert
         self.assertIsInstance(reply_date, str)
     
-    def test_reply_get_parent_post(self):
+    def test_reply_get_parent_post_id(self):
         # act 
-        reply_get_parent_post = self.reply.reply_get_parent_post()
+        reply_get_parent_post = self.reply.get_parent_post_id()
 
         # assert
         self.assertIsInstance(reply_get_parent_post, int)

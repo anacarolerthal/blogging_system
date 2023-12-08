@@ -94,12 +94,40 @@ class Reply(BaseContent):
         self.content = content
         self.image = image
 
+    def get_id(self) -> int:
+        return self.id
+
+    def get_author_id(self) -> int:
+        return self.author_id
+
+    def get_date(self) -> str:
+        return self.date
+
+    def get_parent_post(self) -> int:
+        return self.parent_post_id
+
+    def get_content(self) -> str:
+        return self.content
+
+    def get_image(self) -> str:
+        return self.image
+
+    def set_id(self, id: int) -> None:
+        if type(id) != int:
+            raise TypeError("Tipo inválido de id. Ids devem ser inteiros.")
+        self.id = id
+
+    def set_date(self, date: str) -> None:
+        if type(date) != str:
+            raise TypeError("Tipo inválido para data. Ids devem ser Strings na forma 'YYYY-mm-dd hh:mm:ss'.")
+        self.date = date
+
     def publish(self) -> None:
         return BlogModel().create_reply(self)
-    
+
     def delete(self) -> None:
         return super().delete()
-    
+
     def render(self) -> str:
         display = f"""
         {self.content}
