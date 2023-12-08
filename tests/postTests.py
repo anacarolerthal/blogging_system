@@ -7,7 +7,6 @@ sys.path.append('../src')
 
 from users import User, Moderator
 from content import Post, Reply
-from customExceptions import InvalidFunctionArguments
 
 class TestPostSystem(unittest.TestCase):
     def setUp(self):
@@ -76,7 +75,7 @@ class TestPostSystem(unittest.TestCase):
         post_Id = None
 
         # act
-        with self.assertRaises(InvalidFunctionArguments) as context:
+        with self.assertRaises(TypeError) as context:
             self.post.set_id(post_Id)
 
         # assert
@@ -98,7 +97,7 @@ class TestPostSystem(unittest.TestCase):
         post_date = None
 
         # act
-        with self.assertRaises(InvalidFunctionArguments) as context:
+        with self.assertRaises(TypeError) as context:
             self.post.set_date(post_date)
 
         # assert
