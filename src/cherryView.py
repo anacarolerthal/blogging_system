@@ -16,7 +16,7 @@ cherrypy.config.update({
     })
 
 # read base_html file
-with open('src/html/base_html.html', 'r') as f:
+with open(os.path.join(static_dir, 'base_html.html'), 'r') as f:
     base_html = f.read()
 
 
@@ -43,7 +43,7 @@ def post_to_html(posts):
             </form>
         </div>
         <div class="blog-post-comments">
-            Veja os <a href="get_post_comments/postId={post.id}">comentarios</a>
+            Veja os <a href="get_post_comments/postId={post.id}">comentários</a>
         </div>
     </div>
 </body>
@@ -74,22 +74,24 @@ def comments_to_html(comments):
     content = ''
     for comment in comments:
         content += f'''
-        <div class="comment-meta">
-            <span>Author: {comment.author_id}</span> |
-            <span>Date: {comment.date}</span>
+        <div class="comment">
+            <div class="comment-meta">
+                <span>Author: {comment.author_id}</span> |
+                <span>Date: {comment.date}</span>
+            </div>
+            <div class="comment-content">
+                <p>{comment.content}</p>
+            </div>
         </div>
-    <div class="comment">
-        <div class="comment-content">
-            <p>{comment.content}</p>
-    </div>
-</body>
-</html>
-'''
+    </body>
+    </html>
+    '''
     return base_html.replace('''</body>
 </html>''', content)
 
 def login():
     content = '''
+    <h1 style="text-align: center;">Login</h1>
     <form method="post" action="is_authenticated">
         <input type="text" name="username" placeholder="Username">
         <input type="password" name="password" placeholder="Password">
@@ -104,6 +106,7 @@ def login():
     
 def register():
     content = '''
+    <h1 style="text-align: center;">Registre-se</h1>
     <form method="post" action="is_registered">
         <input type="text" name="username" placeholder="Username">
         <input type="password" name="password" placeholder="Password">
@@ -211,7 +214,7 @@ class BlogView(object):
             comments.reverse()
             return comments_to_html(comments)  
         else:
-            return "Nao ha comentarios"
+            return "Não há comentarios"
         
     @cherrypy.expose
     def is_registered(self, username=None, password=None, email=None):
