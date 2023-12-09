@@ -1,6 +1,7 @@
 import cherrypy
 from admin import Admin
 from content import Post, Reply
+from users import User
 from model import BlogModel
 import utils
 import re
@@ -16,7 +17,7 @@ def post_to_html(posts):
         <input type="text" name="title" placeholder="Sobre o que voce quer falar?">
         <input type="text" name="content" placeholder="Disserte sobre o assunto">
         <input type="submit" value="Postar">
-    </form>    
+    </form>
     """
     for post in posts:
         content += f'''
@@ -35,6 +36,10 @@ def post_to_html(posts):
                 <input type="hidden" name="post_id" value={post.id}>
                 <input type="text" name="content" placeholder="Comente sobre">
                 <input type="submit" value="Comentar">
+            </form>
+            <form method="post" action="do_like">
+                <input type="hidden" name="post_id" value={post.id}>
+                <input type="submit" value="Like">
             </form>
         </div>
         <div class="blog-post-comments">
@@ -79,8 +84,7 @@ def login():
     '''
     return base_html.replace('''</body>
 </html>''', content)
-    
-    
+
 def register():
     content = '''
     <form method="post" action="is_registered">
@@ -112,7 +116,7 @@ class BlogView(object):
         posts.reverse()
         self.posts = posts
         return post_to_html(self.posts)
-    
+
     @cherrypy.expose
     def create_post(self, title, content):
         """
@@ -137,21 +141,25 @@ class BlogView(object):
         if admin.authenticate(username, password):
             # Authentication successful, render the main page
             self.user_id = admin.getId(username)
+            self.user = User(
+                id=self.user_id,
+                username=username,
+                password=password
+            )
             return self.main_page()
         else:
             # Authentication failed, display an error message on the login page
             error_message = "Invalid username or password. Please try again."
             login_form = login() + f'<p style="color: red;">{error_message}</p>'
             return login_form
-        
-        
+
     @cherrypy.expose
     def registering(self):
         '''
         Function that renders the registration page
         '''
         return register()
-    
+
     @cherrypy.expose
     def do_comment(self, content, post_id):
         reply = Reply(
@@ -172,10 +180,15 @@ class BlogView(object):
         if comments is not None:
             comments = [utils.transformReplyDataToObject(reply) for reply in comments]
             comments.reverse()
-            return comments_to_html(comments)  
+            return comments_to_html(comments)
         else:
             return "Nao ha comentarios"
-        
+
+    @cherrypy.expose
+    def do_like(self, post_id):
+        self.user.like(post_id)
+        return self.main_page()
+
     @cherrypy.expose
     def is_registered(self, username=None, password=None, email=None):
         '''
@@ -192,8 +205,4 @@ class BlogView(object):
             error_message = "Nome de usuário em uso. Por favor, tente novamente."
             register_form = register() + f'<p style="color: red;">{error_message}</p>'
             return register_form
-        
-        
-    @cherrypy.expose
-    def print_a(self):
-        print('a')
+
