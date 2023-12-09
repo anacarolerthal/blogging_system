@@ -167,6 +167,43 @@ class TestUserSystem(unittest.TestCase):
         # assert
         self.assertEqual("O usuário não existe.",  str(context.exception))
 
+    def test_user_like_post(self):
+        # arrange
+        postId = 1
+        authorId = self.user.get_id()
+        post = Post(id=postId, title="POST1",  content="ESSEE É O POST 1", author_id=authorId)
+
+        # act
+        self.user.like(postId)
+
+        # assert
+        self.assertIn(postId, self.user.get_liked_posts())
+
+    def test_user_like_already_liked(self):
+        # arrange
+        postId = 2
+        authorId = self.user.get_id()
+
+        self.user.like(postId)
+
+        # act
+        with self.assertRaises(AlreadyLiked) as context:
+            self.user.like(postId)
+
+        # assert
+        self.assertEqual("Post já curtido.",  str(context.exception))
+
+    def test_user_like_invalid_post(self):
+        # arrange
+        postId = 100
+
+        # act
+        with self.assertRaises(InvalidPostException) as context:
+            self.user.like(postId)
+
+        # assert
+        self.assertEqual("O post não existe.",  str(context.exception))
+
 
 if __name__ == '__main__':
     unittest.main()
