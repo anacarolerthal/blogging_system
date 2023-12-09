@@ -83,19 +83,10 @@ class TestUserSystem(unittest.TestCase):
 
         # act
         self.user.follow(other_user_id)
-        
+
         # assert
         self.assertIn(other_user_id, self.user.get_following())
 
-    def test_user_unfollow(self):
-        # arrange
-        other_user_id = 2
-
-        # act
-        self.user.unfollow(other_user_id)
-        
-        # assert
-        self.assertNotIn(other_user_id, self.user.get_following())
 
     def test_user_follow_self(self):
         # arrange
@@ -108,6 +99,40 @@ class TestUserSystem(unittest.TestCase):
         # assert
         self.assertEqual("Não é possível seguir a si mesmo." , str(context.exception))
 
+
+    def test_user_follow_already_following(self):
+        # arrange
+        other_user_id = 3
+        self.user.follow(other_user_id)
+
+        # act
+        with self.assertRaises(AlreadyFollowing) as context:
+            self.user.follow(other_user_id)
+
+        # assert
+        self.assertEqual("Não é possível seguir novamente o mesmo usuário." , str(context.exception))
+
+    def test_user_follow_invalid_user(self):
+        # arrange
+        other_user_id = 100
+
+        # act
+        with self.assertRaises(InvalidUserException) as context:
+            self.user.follow(other_user_id)
+
+        # assert
+        self.assertEqual("O usuário não existe.",  str(context.exception))
+
+    def test_user_unfollow(self):
+        # arrange
+        other_user_id = 2
+
+        # act
+        self.user.unfollow(other_user_id)
+
+        # assert
+        self.assertNotIn(other_user_id, self.user.get_following())
+
     def test_user_unfollow_self(self):
         # arrange
         id_self = self.user.get_id()
@@ -119,21 +144,9 @@ class TestUserSystem(unittest.TestCase):
         # assert
         self.assertEqual("Não é possível deixar de seguir a si mesmo." , str(context.exception))
 
-    def test_user_follow_already_following(self):
-        # arrange
-        other_user_id = 2
-        self.user.follow(other_user_id)
-
-        # act
-        with self.assertRaises(AlreadyFollowing) as context:
-            self.user.follow(other_user_id)
-
-        # assert
-        self.assertEqual("Não é possível seguir novamente o mesmo usuário." , str(context.exception))
-
     def test_user_unfollow_already_not_following(self):
         # arrange
-        other_user_id = 2
+        other_user_id = 3
         self.user.unfollow(other_user_id)
 
         # act
@@ -143,28 +156,16 @@ class TestUserSystem(unittest.TestCase):
         # assert
         self.assertEqual("Não é possível deixar de seguir novamente o mesmo usuário.",  str(context.exception))
 
-    def test_user_follow_invalid_user(self):
-        # arrange
-        other_user_id = 100
-
-        # act
-        with self.assertRaises("AlreadyNotFollowing") as context:
-            self.user.follow(other_user_id)
-
-        # assert
-        self.assertEqual("Não é possível deixar de seguir novamente o mesmo usuário.",  str(context.exception))
-
-
     def test_user_unfollow_invalid_user(self):
         # arrange
         other_user_id = 100
 
         # act
-        with self.assertRaises("AlreadyNotFollowing") as context:
+        with self.assertRaises(InvalidUserException) as context:
             self.user.unfollow(other_user_id)
 
         # assert
-        self.assertRaises("UserNotInDatabase")
+        self.assertEqual("O usuário não existe.",  str(context.exception))
 
 
 if __name__ == '__main__':
