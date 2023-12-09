@@ -8,6 +8,7 @@ sys.path.append('../src')
 
 from src.users import User, Moderator, UserFactory
 from src.content import Post
+from src.customExceptions import *
 
 #User creation
 class TestUserSystem(unittest.TestCase):
@@ -92,7 +93,7 @@ class TestUserSystem(unittest.TestCase):
 
         # act
         self.user.unfollow(other_user_id)
-
+        
         # assert
         self.assertNotIn(other_user_id, self.user.get_following())
 
@@ -101,7 +102,7 @@ class TestUserSystem(unittest.TestCase):
         id_self = self.user.get_id()
 
         # act
-        with self.assertRaises(self.user.follow(self.user.get_id()), "CannotFollowSelf") as context:
+        with self.assertRaises(CannotFollowSelf) as context:
             self.user.follow(id_self)
 
         # assert
@@ -112,7 +113,7 @@ class TestUserSystem(unittest.TestCase):
         id_self = self.user.get_id()
 
         # act
-        with self.assertRaises(self.user.unfollow(self.user.get_id()), "CannotUnfollowSelf") as context:
+        with self.assertRaises(CannotUnfollowSelf) as context:
             self.user.unfollow(id_self)
 
         # assert
@@ -124,7 +125,7 @@ class TestUserSystem(unittest.TestCase):
         self.user.follow(other_user_id)
 
         # act
-        with self.assertRaises(self.user.follow(other_user_id), "AlreadyFollowing") as context:
+        with self.assertRaises(AlreadyFollowing) as context:
             self.user.follow(other_user_id)
 
         # assert
@@ -136,7 +137,7 @@ class TestUserSystem(unittest.TestCase):
         self.user.unfollow(other_user_id)
 
         # act
-        with self.assertRaises(self.user.unfollow(other_user_id), "AlreadyNotFollowing") as context:
+        with self.assertRaises(AlreadyNotFollowing) as context:
             self.user.unfollow(other_user_id)
 
         # assert
@@ -147,7 +148,7 @@ class TestUserSystem(unittest.TestCase):
         other_user_id = 100
 
         # act
-        with self.assertRaises(self.user.follow(other_user_id), "AlreadyNotFollowing") as context:
+        with self.assertRaises("AlreadyNotFollowing") as context:
             self.user.follow(other_user_id)
 
         # assert
@@ -159,11 +160,11 @@ class TestUserSystem(unittest.TestCase):
         other_user_id = 100
 
         # act
-        with self.assertRaises(self.user.unfollow(other_user_id), "AlreadyNotFollowing") as context:
+        with self.assertRaises("AlreadyNotFollowing") as context:
             self.user.unfollow(other_user_id)
 
         # assert
-        self.assertRaises(self.user.unfollow(other_user_id), "UserNotInDatabase")
+        self.assertRaises("UserNotInDatabase")
 
 
 if __name__ == '__main__':
