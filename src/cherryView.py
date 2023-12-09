@@ -107,14 +107,22 @@ def personal_page_html(user, posts):
     content = f'''
     <div>
         <h3>Seguidores</h3>
-        <p>{user.get_followers()}</p>
+        <ul>
+    '''
+    for follower in user.get_followers():
+        content += f'<li>{follower}</li>'
+    content += '''
+        </ul>
     </div>
     <div>
         <h3>Seguindo</h3>
-        <p>{user.get_following()}</p>
+        <ul>
+    '''
+    for following in user.get_following():
+        content += f'<li>{following}</li>'
+    content += '''
+        </ul>
     </div>
-    <div>
-        <h3>Posts</h3>
     '''
 
 
@@ -152,6 +160,7 @@ class BlogView(object):
     def personal_page(self):
         # get user posts
         user_posts = [utils.transformPostDataToObject(post) for post in self.model.get_posts_for_user(self.user_id)]
+        user_posts.reverse()
         return personal_page_html(self.user, user_posts)
 
     @cherrypy.expose
@@ -160,7 +169,7 @@ class BlogView(object):
         Create a post and return to the all posts page
         """
         post = Post(
-            author_id=self.user_id,
+            author_id=self.self.user_id,
             title=title,
             content=content
         )
@@ -176,11 +185,13 @@ class BlogView(object):
         admin = Admin()
         if admin.authenticate(username, password):
             # Authentication successful, render the main page
-            self.user_id = admin.getId(username)
             self.user = User(
                 username=username,
                 password=password
             )
+            user_id = self.model.get_user_id_by_username(username)
+            self.user.set_id(user_id)
+            self.user_id = self.user.get_id()
             return self.main_page()
         else:
             # Authentication failed, display an error message on the login page
@@ -245,4 +256,8 @@ class BlogView(object):
             error_message = "Nome de usuário em uso. Por favor, tente novamente."
             register_form = register() + f'<p style="color: red;">{error_message}</p>'
             return register_form
+
+    @cherrypy.expose
+    def print_a(self):
+        print('.')
 
