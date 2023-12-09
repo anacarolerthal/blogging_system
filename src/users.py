@@ -38,7 +38,7 @@ class User(BaseUser):
     """
     def __init__(self,
                  username: str,
-                 password: str,
+                 password: str = None,
                  email: str = None,
                  id: int = None,
                  posts: List[int] = None, 
@@ -115,7 +115,7 @@ class User(BaseUser):
 
         BlogModel().unlike(self.get_id(), post_id)
         pass
-    
+
 
     def follow(self, followee_id: int) -> None:
         """Follow a user"""
@@ -152,7 +152,7 @@ class User(BaseUser):
 
 class Moderator(BaseUser):
     """A moderator of the system"""
-    def __init__(self, 
+    def __init__(self,
                  username: str,
                  password: str,
                  email: str,

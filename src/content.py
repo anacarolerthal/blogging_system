@@ -75,7 +75,9 @@ class Post(BaseContent):
         for tag in self.tags:
             tg = Tag(tag)
             tg.publish()
-            BlogModel().create_tagged_post(self.id, tg.get_tag_id())
+            tag_id = BlogModel().get_tag_id_by_name(tg.get_tag_name())
+            # BlogModel().create_tagged_post(self.id, tg.get_tag_id())
+            BlogModel().create_tagged_post(self.id, tag_id)
         pass
 
     def publish(self):
