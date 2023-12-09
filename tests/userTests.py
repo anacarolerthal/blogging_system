@@ -170,8 +170,6 @@ class TestUserSystem(unittest.TestCase):
     def test_user_like_post(self):
         # arrange
         postId = 1
-        authorId = self.user.get_id()
-        post = Post(id=postId, title="POST1",  content="ESSEE É O POST 1", author_id=authorId)
 
         # act
         self.user.like(postId)
@@ -182,8 +180,6 @@ class TestUserSystem(unittest.TestCase):
     def test_user_like_already_liked(self):
         # arrange
         postId = 2
-        authorId = self.user.get_id()
-
         self.user.like(postId)
 
         # act
@@ -203,6 +199,39 @@ class TestUserSystem(unittest.TestCase):
 
         # assert
         self.assertEqual("O post não existe.",  str(context.exception))
+
+    def test_user_unlike_post(self):
+        # arrange
+        postId = 1
+
+        # act
+        self.user.unlike(postId)
+        # assert
+        self.assertNotIn(postId, self.user.get_liked_posts())
+
+    def test_user_unlike_already_unliked(self):
+        # arrange
+        postId = 2
+        self.user.unlike(postId)
+
+        # act
+        with self.assertRaises(AlreadyNotLiked) as context:
+            self.user.unlike(postId)
+
+        # assert
+        self.assertEqual("Post já descurtido.",  str(context.exception))
+    
+    def test_user_unlike_invalid_post(self):
+        # arrange
+        postId = 100
+
+        # act
+        with self.assertRaises(InvalidPostException) as context:
+            self.user.unlike(postId)
+
+        # assert
+        self.assertEqual("O post não existe.",  str(context.exception))
+
 
 
 if __name__ == '__main__':
