@@ -21,16 +21,21 @@ with open(os.path.join(static_dir, 'base_html.html'), 'r') as f:
     base_html = f.read()
 
 
-def post_to_html(posts):
+def post_to_html(posts, user=None, n_followers=None, n_following=None):
+    if user is not None and n_followers is not None and n_following is not None:
+        content = f'''
+        <div class="user-info">
+            <h2>Bem-vindo ao Bloggster!</h2>
+            <h3>Seguidores: {n_followers} | Seguindo: {n_following} |  <a href="/followers_page">Ver</a></h3>
+            <p>Deseja escrever uma <a href="http://localhost:8080/new_post">Nova Postagem</a>?</p>
+        </div>
+        '''
+    else:
+        content = """
+        <h1 style="text-align: center;">Bem-vindo ao Bloggster!</h1>
+        <p style="text-align: center;">Deseja escrever uma <a href="http://localhost:8080/new_post">Nova Postagem</a>?</p>  
+        """
 
-    content = """
-    <a href="personal_page">Meu perfil</a>
-    <form method="post" action="create_post">
-        <input type="text" name="title" placeholder="Sobre o que voce quer falar?">
-        <input type="text" name="content" placeholder="Disserte sobre o assunto">
-        <input type="submit" value="Postar">
-    </form>
-    """
     for post in posts:
         content += f'''
     <div class="blog-post">
@@ -72,9 +77,10 @@ def new_post_to_html():
         <input type="text" id="title" name="title" placeholder="Sobre o que voce quer falar?" required>
 
         <label for="content">Conteúdo:</label>
-        <textarea type="text" id="content" name="content" placeholder="Disserte sobre o assunto" rows="10" required></textarea>
+        <textarea type="text" id="content" name="content" placeholder="Disserte sobre o assunto" rows="15" required></textarea>
 
         <label for="tags">Tags:</label>
+        <input type="text" id="tags" name="tags">
 
         <input type="submit" value="Postar">
     </form>    
@@ -133,43 +139,42 @@ def register():
 </html>''', content)
 
 def personal_page_html(user, posts):
-    # button to see followers
-    # button to see following
+    followers = user.get_followers()
+    following = user.get_following()
 
+    return post_to_html(posts, user=user, n_followers=len(followers), n_following=len(following))
+
+def followers_page_html(user, followers):
     content = f'''
-    <div>
-        <h3>Seguidores</h3>
-        <ul>
-    '''
+    <div class="user-followers">
+        <div class="followers-column">
+            <h2>Seguidores:</h2>
+            <ul>
+            '''
     for follower in user.get_followers():
         content += f'<li>{follower}</li>'
     content += '''
-        </ul>
-    </div>
-    <div>
-        <h3>Seguindo</h3>
-        <ul>
-    '''
+            </ul>
+        </div>
+        <div class="following-column">
+            <h2>Seguindo:</h2>
+            <ul>
+        '''
     for following in user.get_following():
         content += f'<li>{following}</li>'
     content += '''
-        </ul>
+            </ul>
+        </div>
     </div>
-    '''
-
-
-    # use post_to_html but with only the posts of the user
-    base_html = post_to_html(posts)
-
-    # insert button to delete post where id = post.id
-    base_html.replace('''<input type="submit" value="Like">
-            </form>''', '''<input type="submit" value="Like">
-            </form>
-            <form method="post" action="delete_post">
-                <input type="hidden" name="post_id" value={post.id}>
-                <input type="submit" value="Delete">
-            </form>''')
-    return content + base_html
+    <br>
+    <div class="back-button">
+        <h2><a href="http://localhost:8080/personal_page">← Voltar</a></h2>
+    </div>
+    </body>
+    </html>
+        '''
+    return base_html.replace('''</body>
+</html>''', content)
 
 class BlogView(object):
     def __init__(self):
@@ -190,25 +195,27 @@ class BlogView(object):
 
     @cherrypy.expose
     def personal_page(self):
+        if self.user_id is None:
+            return login()
         # get user posts
         user_posts = [utils.transformPostDataToObject(post) for post in self.model.get_posts_for_user(self.user_id)]
         user_posts.reverse()
+        # if user has no posts, display a message
+        if len(user_posts) == 0:
+            return personal_page_html(self.user, user_posts) + '<p style="text-align: center;">Você ainda não tem nenhuma postagem. Clique em <a href="http://localhost:8080/new_post">"Nova Postagem"</a> para começar a blogar!</p>'
         return personal_page_html(self.user, user_posts)
-
+    
     @cherrypy.expose
-    def my_posts(self):
-        posts = [utils.transformPostDataToObject(post) for post in self.model.get_posts_by_author(self.user_id)]
-        posts.reverse()
-        self.posts = posts
-        # se o usuario nao tiver posts, exibe uma mensagem
-        if len(posts) == 0:
-            content = '''<p>Você ainda não tem posts publicados. Vá em <a href=http://localhost:8080/new_post>Escrever novo post</a> para começar a blogar!</p>'''
-            return base_html.replace('''</body>
-                                     </html>''', content)
-        return post_to_html(self.posts)
+    def followers_page(self):
+        if self.user_id is None:
+            return login()
+        followers = self.user.get_followers()
+        return followers_page_html(self.user, followers)
     
     @cherrypy.expose
     def new_post(self):
+        if self.user_id is None:
+            return login()
         return new_post_to_html()
     
     @cherrypy.expose
@@ -216,6 +223,8 @@ class BlogView(object):
         """
         Create a post and return to the all posts page
         """
+        if self.user_id is None:
+            return login()
         post = Post(
             author_id=self.self.user_id,
             title=title,
@@ -308,4 +317,3 @@ class BlogView(object):
     @cherrypy.expose
     def print_a(self):
         print('.')
-
