@@ -16,6 +16,12 @@ h1 {
     margin: 35px;
 }
 
+h2 {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #2f2c79;
+}
+
 .header {
     background-color: #2b0354;
     color: #fff;
@@ -130,9 +136,40 @@ a:hover {
     text-decoration: underline;
 }
 
+.user-info {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    margin-left: 145px;
+}
+
+.user-followers {
+    display: flex;
+}
+
+.followers-column, .following-column {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    margin-left: 30px;
+    flex: 1;
+}
+
+.back-button {
+    margin-left: 35px;
+    margin-top: 10px;
+}
+
+.back-button:hover {
+    text-decoration: underline;
+    cursor: pointer;
+    font-weight: bold;
+    color: #2b0354;
+}
+
 .error-message {
     color: rgb(182, 4, 4);
     margin-top: 10px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .blog-post {

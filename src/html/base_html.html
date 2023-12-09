@@ -5,24 +5,24 @@
 
     <script>
     // Function to check if the user has scrolled to the bottom
-    function isScrolledToBottom() {
-      const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
-      const scrollHeight = document.documentElement.scrollHeight || document.body.scrollHeight;
-      const clientHeight = document.documentElement.clientHeight || document.body.clientHeight;
-      return scrollTop + clientHeight >= scrollHeight;
-    }
+    //function isScrolledToBottom() {
+     // const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+      //const scrollHeight = document.documentElement.scrollHeight || document.body.scrollHeight;
+      //const clientHeight = document.documentElement.clientHeight || document.body.clientHeight;
+      //return scrollTop + clientHeight >= scrollHeight;
+    //}
 
     
 
     // Event listener for scrolling
-    window.addEventListener('scroll', function () {
-      if (isScrolledToBottom()) {
-        alert('You scrolled to the bottom!');
-        window.location.href = "http://localhost:8080/print_a";
+    //window.addEventListener('scroll', function () {
+    //  if (isScrolledToBottom()) {
+    //    alert('You scrolled to the bottom!');
+    //    window.location.href = "http://localhost:8080/print_a";
         //window.location.href = "http://localhost:8080/page2";
 
-      }
-    });
+    //  }
+    //});
     </script>
 
     <title>Bloggster</title>
@@ -30,11 +30,10 @@
 <body class="container">
     <div class="header">
         <div class="logo">Bloggster</div>
-        <!-- <div class="user-info">Bem-vindo, {user_info}</div>-->
         <div class="navigation" style="text-align: center;">
             <a href="/main_page">Home</a> |
-            <a href="/new_post">Escrever novo post</a> |
-            <a href="/my_posts">Meus Posts</a> 
+            <a href="/new_post">Nova Postagem</a> |
+            <a href="/personal_page">Meu Perfil</a> 
         </div>
     </div>
 </body>
