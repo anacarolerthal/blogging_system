@@ -148,3 +148,7 @@ class BlogModel:
         tag_id = self.cursor.fetchone()[0]
         self.connection.commit()
         return tag_id
+
+    def create_tagged_post(self, post_id, tag_id):
+        self.cursor.execute('INSERT INTO posttag (post_id, tag_id) VALUES (%s,%s)', (post_id, tag_id))
+        self.connection.commit()

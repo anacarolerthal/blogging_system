@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from model import BlogModel
+from tags import Tag
 from datetime import datetime
+from typing import *
 
 class BaseContent(ABC):
     """Abstract class for a content in the blog"""
@@ -28,13 +30,15 @@ class Post(BaseContent):
                  id: int = None,
                  date: str = None,
                  content: str = None,
-                 image: str = None):
+                 image: str = None,
+                 tags: List[str] = None):
         self.id = id
         self.author_id = author_id
         self.date = date
         self.title = title
         self.content = content
         self.image = image
+        self.tags = tags if tags is not None else []
 
     def get_id(self) -> int:
         return self.id
@@ -54,6 +58,9 @@ class Post(BaseContent):
     def get_image(self) -> str:
         return self.image
 
+    def get_tags(self) -> List[str]:
+        return self.tags
+
     def set_id(self, id: int) -> None:
         if type(id) != int:
             raise TypeError("Tipo inválido de id. Ids devem ser inteiros.")
@@ -64,20 +71,29 @@ class Post(BaseContent):
             raise TypeError("Tipo inválido para data. Ids devem ser Strings na forma 'YYYY-mm-dd hh:mm:ss'.")
         self.date = date
 
+    def publish_tags(self) -> None:
+        for tag in self.tags:
+            tg = Tag(tag)
+            tg.publish()
+            BlogModel().create_tagged_post(self.id, tg.get_tag_id())
+        pass
+
     def publish(self):
         id = BlogModel().create_post(self)
-        return id
-    
+        self.id = id
+        self.publish_tags()
+        pass
+
     def delete(self) -> None:
         return super().delete()
-    
+
     def render(self) -> str:
         display = f"""
             -----{self.title}------- \n
             {self.content}
         """
         return display
-        
+
 class Reply(BaseContent):
     """A comment in a post"""
     def __init__(self,
@@ -86,7 +102,8 @@ class Reply(BaseContent):
                  id: int = None,
                  date: str = None,
                  content: str = None,
-                 image: str = None):
+                 image: str = None,
+                 tags: List[str] = None):
         self.id = None
         self.author_id = author_id
         self.date = date
@@ -134,6 +151,7 @@ class Reply(BaseContent):
         """
         return display
     
+
 #Simple Factory
 # class ContentFactory:
 #     @staticmethod
