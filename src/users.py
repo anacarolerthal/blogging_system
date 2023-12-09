@@ -38,7 +38,7 @@ class User(BaseUser):
     """
     def __init__(self,
                  username: str,
-                 password: str,
+                 password: str = None,
                  email: str = None,
                  id: int = None,
                  posts: List[int] = None, 
