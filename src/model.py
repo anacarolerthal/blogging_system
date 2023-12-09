@@ -2,8 +2,9 @@
 import psycopg2
 
 #def
-DATABASE_URL = "postgres://wxishrvi:2bKsBjBn5-hrqFKFb79grU1Kl71n9ext@isabelle.db.elephantsql.com/wxishrvi"
-
+#DATABASE_URL = "postgres://wxishrvi:2bKsBjBn5-hrqFKFb79grU1Kl71n9ext@isabelle.db.elephantsql.com/wxishrvi"
+#user postgres, password admin, database blogdb
+DATABASE_URL = "postgres://postgres:admin@localhost:5432/blogdb"
 #singleton to ensure just one connection
 class Singleton:
     def __init__(self, cls):
@@ -65,29 +66,35 @@ class BlogModel:
     def check_user(self, username, password):
         self.cursor.execute('SELECT * FROM baseuser WHERE username = %s AND passw = %s', (username, password))
         return bool(self.cursor.fetchone())
-    
+
     def get_user_id_by_username(self, username):
         self.cursor.execute('SELECT id FROM baseuser WHERE username = %s', (username, ))
         return self.cursor.fetchone()
-    
+
     def add_user(self, username, password, email):
         self.cursor.execute('INSERT INTO baseuser (username, passw, email, is_moderator) VALUES (%s, %s, %s, %s)', (username, password, email, False))
         self.connection.commit()
 
     def follow(self, follower, followee):
-        self.cursor.execute('INSERT INTO userfollows (follower_id, followee_id) VALUES (%s,%s)' (follower, followee))
+        self.cursor.execute('INSERT INTO userfollows (follower_id, followee_id) VALUES (%s,%s)', (follower, followee))
         self.connection.commit()
     
     def unfollow(self, follower, followee):
-        self.cursor.execute('DELETE FROM userfollows WHERE follower_id = %s AND followee_id = %s' (follower, followee))
+        self.cursor.execute('DELETE FROM userfollows WHERE follower_id = %s AND followee_id = %s', (follower, followee))
         self.connection.commit()
     
     def get_following_user(self, user_id):
         self.cursor.execute('SELECT followee_id FROM userfollows WHERE follower_id = %s', (user_id,))
-        return self.cursor.fetchall()
+        out = self.cursor.fetchall()
+        id_lists = []
+        for id in out:
+            id_lists.append(id[0])
+        return id_lists
     
     def get_followers_user(self, user_id):
         self.cursor.execute('SELECT follower_id FROM userfollows WHERE followee_id = %s', (user_id,))
-        return self.cursor.fetchall()
-
-
+        out = self.cursor.fetchall()
+        id_lists = []
+        for id in out:
+            id_lists.append(id[0])
+        return id_lists
