@@ -101,6 +101,22 @@ def register():
 </html>''', content)
 
 def personal_page_html(user, posts):
+    # button to see followers
+    # button to see following
+
+    content = f'''
+    <div>
+        <h3>Seguidores</h3>
+        <p>{user.get_followers()}</p>
+    </div>
+    <div>
+        <h3>Seguindo</h3>
+        <p>{user.get_following()}</p>
+    </div>
+    <div>
+        <h3>Posts</h3>
+    '''
+
 
     # use post_to_html but with only the posts of the user
     base_html = post_to_html(posts)
@@ -113,7 +129,7 @@ def personal_page_html(user, posts):
                 <input type="hidden" name="post_id" value={post.id}>
                 <input type="submit" value="Delete">
             </form>''')
-    return base_html
+    return content + base_html
 
 class BlogView(object):
     def __init__(self):
