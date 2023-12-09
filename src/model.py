@@ -32,7 +32,9 @@ class BlogModel:
         self.connection = DBConnection.Instance().connection
         self.cursor = self.connection.cursor()
         
-        #self.connection.commit()
+    # def __del__(self):
+    #     self.cursor.close()
+    #     self.connection.close()
 
     def create_post(self, post):
         self.cursor.execute('INSERT INTO Post (author_id, title, text_content, image) VALUES (%s, %s, %s, %s) RETURNING id', 
@@ -71,3 +73,21 @@ class BlogModel:
     def add_user(self, username, password, email):
         self.cursor.execute('INSERT INTO baseuser (username, passw, email, is_moderator) VALUES (%s, %s, %s, %s)', (username, password, email, False))
         self.connection.commit()
+
+    def follow(self, follower, followee):
+        self.cursor.execute('INSERT INTO userfollows (follower_id, followee_id) VALUES (%s,%s)' (follower, followee))
+        self.connection.commit()
+    
+    def unfollow(self, follower, followee):
+        self.cursor.execute('DELETE FROM userfollows WHERE follower_id = %s AND followee_id = %s' (follower, followee))
+        self.connection.commit()
+    
+    def get_following_user(self, user_id):
+        self.cursor.execute('SELECT followee_id FROM userfollows WHERE follower_id = %s', (user_id,))
+        return self.cursor.fetchall()
+    
+    def get_followers_user(self, user_id):
+        self.cursor.execute('SELECT follower_id FROM userfollows WHERE followee_id = %s', (user_id,))
+        return self.cursor.fetchall()
+
+

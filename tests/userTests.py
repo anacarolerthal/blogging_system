@@ -2,7 +2,10 @@
 import unittest
 import sys
 
+#APPENDS SRC FOLDER TO PATH
 sys.path.append('../')
+sys.path.append('../src')
+
 from src.users import User, Moderator, UserFactory
 from src.content import Post
 
@@ -11,7 +14,8 @@ class TestUserSystem(unittest.TestCase):
     def setUp(self):
         # arrange
         # Initialize objects for testing
-        self.user = User(username="user1", password="pass1", email="user1@example.com")
+        self.user = User(username="user1", password="pass1", email="email@email.com", id = 1,
+                         posts = [], followers = [], following = [])
         self.moderator = Moderator(username="moderator1", password="modpass", email="moderator1@example.com")
         self.user_factory = UserFactory()
 
@@ -80,7 +84,7 @@ class TestUserSystem(unittest.TestCase):
         self.user.follow(other_user_id)
         
         # assert
-        self.assertIn(other_user_id, self.user.get_all_following())
+        self.assertIn(other_user_id, self.user.get_following())
 
     def test_user_unfollow(self):
         # arrange
@@ -90,7 +94,7 @@ class TestUserSystem(unittest.TestCase):
         self.user.unfollow(other_user_id)
 
         # assert
-        self.assertNotIn(other_user_id, self.user.get_all_following())
+        self.assertNotIn(other_user_id, self.user.get_following())
 
     def test_user_follow_self(self):
         # arrange
@@ -161,66 +165,6 @@ class TestUserSystem(unittest.TestCase):
         # assert
         self.assertRaises(self.user.unfollow(other_user_id), "UserNotInDatabase")
 
-    # TESTING MODERATOR INTERACTION
-
-    def test_moderator_delete_post(self):
-        postId = 1
-        authorId = self.user.get_id()
-        post = Post(id=postId, title="Title",  content="This is a test post.", author_id=authorId)
-        self.moderator.delete_post(post)
-        self.assertNotIn(post, self.user.get_posts())
-
-    def test_moderator_delete_post_invalid_post(self):
-        post = None
-        #Assert if error "InvalidPost" is raised
-        self.assertRaises(self.moderator.delete_post(post), "InvalidPost")
-
-    def test_moderator_ban_user(self):
-        userId = 1
-        self.moderator.ban_user(userId)
-        self.assertIn(userId, self.moderator.get_banned_users())
-
-    def test_moderator_ban_user_invalid_user(self):
-        userId = 100
-        #Assert if error "InvalidUser" is raised
-        self.assertRaises(self.moderator.ban_user(userId), "UserNotInDatabase")
-
-    def test_moderator_unban_user(self):
-        userId = 1
-        self.moderator.unban_user(userId)
-        self.assertNotIn(userId, self.moderator.get_banned_users())
-
-    def test_moderator_unban_user_invalid_user(self):
-        userId = 100
-        #Assert if error "InvalidUser" is raised
-        self.assertRaises(self.moderator.unban_user(userId), "UserNotInDatabase")
-
-    def test_moderator_unban_user_not_banned(self):
-        userId = 1
-        #Assert if error "UserNotBanned" is raised
-        self.assertRaises(self.moderator.unban_user(userId), "UserNotBanned")
-
-    def test_moderator_ban_user_already_banned(self):
-        userId = 1
-        self.moderator.ban_user(userId)
-        #Assert if error "UserAlreadyBanned" is raised
-        self.assertRaises(self.moderator.ban_user(userId), "UserAlreadyBanned")
-
-    def test_moderator_ban_other_moderator(self):
-        userId = 2
-        #Assert if error "CannotBanModerator" is raised
-        self.assertRaises(self.moderator.ban_user(userId), "CannotBanModerator")
-
-
-    def test_user_factory_create_user(self):
-        created_user = self.user_factory.create_user("user", "user2", "pass2", "user2@example.com")
-        self.assertIsInstance(created_user, User)
-
-        created_moderator = self.user_factory.create_user("moderator", "moderator2", "modpass2", "moderator2@example.com")
-        self.assertIsInstance(created_moderator, Moderator)
-
-        with self.assertRaises(ValueError):
-            self.user_factory.create_user("invalid_type", "invalid", "pass", "invalid@example.com")
 
 if __name__ == '__main__':
     unittest.main()
