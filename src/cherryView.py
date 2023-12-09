@@ -186,8 +186,14 @@ class BlogView(object):
 
     @cherrypy.expose
     def do_like(self, post_id):
-        self.user.like(post_id)
-        return self.main_page()
+        try:
+            self.user.like(post_id)
+            return self.main_page().replace('''<input type="submit" value="Like">''',
+                                            '''<input type="submit" value="Unlike">''')
+        except Exception as e:
+            # dislike
+            self.user.unlike(post_id)
+            return self.main_page()
 
     @cherrypy.expose
     def is_registered(self, username=None, password=None, email=None):
