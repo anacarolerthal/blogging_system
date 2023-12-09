@@ -93,11 +93,17 @@ class User(BaseUser):
 
     def follow(self, followee_id: int) -> None:
         """Follow a user"""
+        if not BlogModel().check_if_user_in_db(followee_id):
+            raise InvalidUserException()
+
         if followee_id == self.get_id():
             raise CannotFollowSelf()
 
         if followee_id in self.get_following():
+            print(True)
             raise AlreadyFollowing()
+
+
 
         id_self = self.get_id()
         BlogModel().follow(id_self, followee_id)
@@ -105,6 +111,10 @@ class User(BaseUser):
 
     def unfollow(self, followee_id: int) -> None:
         """Unfollow a user"""
+
+        if not BlogModel().check_if_user_in_db(followee_id):
+            raise InvalidUserException()
+
         if followee_id == self.get_id():
             raise CannotUnfollowSelf()
 

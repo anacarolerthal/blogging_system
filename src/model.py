@@ -72,8 +72,10 @@ class BlogModel:
         return self.cursor.fetchone()
 
     def add_user(self, username, password, email):
-        self.cursor.execute('INSERT INTO baseuser (username, passw, email, is_moderator) VALUES (%s, %s, %s, %s)', (username, password, email, False))
+        self.cursor.execute('INSERT INTO baseuser (username, passw, email, is_moderator) VALUES (%s, %s, %s, %s) RETURNING id', (username, password, email, False))
+        user_id = self.cursor.fetchone()[0]
         self.connection.commit()
+        return user_id
 
     def follow(self, follower, followee):
         self.cursor.execute('INSERT INTO userfollows (follower_id, followee_id) VALUES (%s,%s)', (follower, followee))
@@ -98,3 +100,7 @@ class BlogModel:
         for id in out:
             id_lists.append(id[0])
         return id_lists
+
+    def check_if_user_in_db(self, user_id):
+        self.cursor.execute('SELECT * FROM baseuser WHERE id = %s', (user_id,))
+        return bool(self.cursor.fetchone())
