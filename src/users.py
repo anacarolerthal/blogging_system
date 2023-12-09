@@ -105,6 +105,18 @@ class User(BaseUser):
         BlogModel().like(self.get_id(), post_id)
         pass
 
+    def unlike(self, post_id: int) -> None:
+        """Unlike a post"""
+        if not BlogModel().check_if_post_in_db(post_id):
+            raise InvalidPostException()
+
+        if not BlogModel().check_if_post_already_liked(self.get_id(), post_id):
+            raise AlreadyNotLiked()
+
+        BlogModel().unlike(self.get_id(), post_id)
+        pass
+    
+
     def follow(self, followee_id: int) -> None:
         """Follow a user"""
         if not BlogModel().check_if_user_in_db(followee_id):
@@ -185,4 +197,3 @@ class UserFactory:
             return Moderator()
         else:
             raise ValueError(f'User type {type_} is not valid.')
-            

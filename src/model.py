@@ -102,6 +102,8 @@ class BlogModel:
         for id in out:
             id_lists.append(id[0])
         return id_lists
+    
+    ############## check existance ###########
 
     def check_if_user_in_db(self, user_id):
         self.cursor.execute('SELECT * FROM baseuser WHERE id = %s', (user_id,))
@@ -117,6 +119,11 @@ class BlogModel:
         self.cursor.execute('INSERT INTO postlikes (user_id, post_id) VALUES (%s,%s)', (user_id, post_id))
         self.connection.commit()
 
+    def unlike(self, user_id, post_id):
+        self.cursor.execute('DELETE FROM postlikes WHERE user_id = %s AND post_id = %s', (user_id, post_id))
+        self.connection.commit()
+
+
     def get_all_liked_posts_by_user(self, user_id):
         self.cursor.execute('SELECT post_id FROM postlikes WHERE user_id = %s', (user_id,))
         out = self.cursor.fetchall()
@@ -128,3 +135,16 @@ class BlogModel:
     def check_if_post_already_liked(self, user_id, post_id):
         self.cursor.execute('SELECT * FROM postlikes WHERE user_id = %s AND post_id = %s', (user_id, post_id))
         return bool(self.cursor.fetchone())
+
+
+    ############## tag ##############
+    def check_if_tag_in_db(self, tag_name):
+        self.cursor.execute('SELECT * FROM tag WHERE tag_name = %s', (tag_name,))
+        return bool(self.cursor.fetchone())
+
+    def create_tag(self, tag_name):
+        self.cursor.execute('INSERT INTO tag (tag_name) VALUES (%s) RETURNING tag_id', 
+                            (tag_name,))
+        tag_id = self.cursor.fetchone()[0]
+        self.connection.commit()
+        return tag_id
