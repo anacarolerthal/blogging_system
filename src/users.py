@@ -82,6 +82,12 @@ class User(BaseUser):
         self.__following = [user for user in following_list]
         return self.__following
 
+    def get_liked_posts(self) -> List[int]:
+        """Get the liked posts of the user"""
+        id_self = self.get_id()
+        liked_posts = BlogModel().get_all_liked_posts_by_user(id_self)
+        return liked_posts
+
     def set_id(self, user_id):
         if type(user_id) != int:
             raise TypeError("Tipo inválido de id. Ids devem ser inteiros.")
@@ -89,6 +95,14 @@ class User(BaseUser):
 
     def like(self, post_id: int) -> None:
         """Like a post"""
+        if not BlogModel().check_if_post_in_db(post_id):
+            raise InvalidPostException()
+
+        if BlogModel().check_if_post_already_liked(self.get_id(), post_id):
+            raise AlreadyLiked()
+
+        BlogModel().like(self.get_id(), post_id)
+
         pass
 
     def follow(self, followee_id: int) -> None:
@@ -102,7 +116,6 @@ class User(BaseUser):
         if followee_id in self.get_following():
             print(True)
             raise AlreadyFollowing()
-
 
 
         id_self = self.get_id()

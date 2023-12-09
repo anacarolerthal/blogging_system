@@ -76,6 +76,8 @@ class BlogModel:
         user_id = self.cursor.fetchone()[0]
         self.connection.commit()
         return user_id
+    
+    ########### follow ##############
 
     def follow(self, follower, followee):
         self.cursor.execute('INSERT INTO userfollows (follower_id, followee_id) VALUES (%s,%s)', (follower, followee))
@@ -92,7 +94,7 @@ class BlogModel:
         for id in out:
             id_lists.append(id[0])
         return id_lists
-    
+
     def get_followers_user(self, user_id):
         self.cursor.execute('SELECT follower_id FROM userfollows WHERE followee_id = %s', (user_id,))
         out = self.cursor.fetchall()
@@ -103,4 +105,26 @@ class BlogModel:
 
     def check_if_user_in_db(self, user_id):
         self.cursor.execute('SELECT * FROM baseuser WHERE id = %s', (user_id,))
+        return bool(self.cursor.fetchone())
+
+    def check_if_post_in_db(self, post_id):
+        self.cursor.execute('SELECT * FROM post WHERE id = %s', (post_id,))
+        return bool(self.cursor.fetchone())
+
+
+    ############## like ##############
+    def like(self, user_id, post_id):
+        self.cursor.execute('INSERT INTO postlikes (user_id, post_id) VALUES (%s,%s)', (user_id, post_id))
+        self.connection.commit()
+
+    def get_all_liked_posts_by_user(self, user_id):
+        self.cursor.execute('SELECT post_id FROM postlikes WHERE user_id = %s', (user_id,))
+        out = self.cursor.fetchall()
+        id_lists = []
+        for id in out:
+            id_lists.append(id[0])
+        return id_lists
+
+    def check_if_post_already_liked(self, user_id, post_id):
+        self.cursor.execute('SELECT * FROM postlikes WHERE user_id = %s AND post_id = %s', (user_id, post_id))
         return bool(self.cursor.fetchone())
