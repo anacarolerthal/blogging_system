@@ -1,6 +1,7 @@
 import cherrypy
 from admin import Admin
 from content import Post, Reply
+from users import User
 from model import BlogModel
 import utils
 import re
@@ -21,8 +22,15 @@ with open(os.path.join(static_dir, 'base_html.html'), 'r') as f:
 
 
 def post_to_html(posts):
-    # Renderiza a página principal
-    content = ''
+
+    content = """
+    <a href="personal_page">Meu perfil</a>
+    <form method="post" action="create_post">
+        <input type="text" name="title" placeholder="Sobre o que voce quer falar?">
+        <input type="text" name="content" placeholder="Disserte sobre o assunto">
+        <input type="submit" value="Postar">
+    </form>
+    """
     for post in posts:
         content += f'''
     <div class="blog-post">
@@ -40,6 +48,10 @@ def post_to_html(posts):
                 <input type="hidden" name="post_id" value={post.id}>
                 <textarea type="text" id="content" name="content" placeholder="Comente sobre" rows="4" required></textarea>
                 <input type="submit" value="Comentar">
+            </form>
+            <form method="post" action="do_like">
+                <input type="hidden" name="post_id" value={post.id}>
+                <input type="submit" value="Like">
             </form>
         </div>
         <div class="blog-post-comments">
@@ -103,7 +115,7 @@ def login():
     '''
     return base_html.replace('''</body>
 </html>''', content)
-    
+ 
 def register():
     content = '''
     <h1 style="text-align: center;">Registre-se</h1>
@@ -120,6 +132,44 @@ def register():
     return base_html.replace('''</body>
 </html>''', content)
 
+def personal_page_html(user, posts):
+    # button to see followers
+    # button to see following
+
+    content = f'''
+    <div>
+        <h3>Seguidores</h3>
+        <ul>
+    '''
+    for follower in user.get_followers():
+        content += f'<li>{follower}</li>'
+    content += '''
+        </ul>
+    </div>
+    <div>
+        <h3>Seguindo</h3>
+        <ul>
+    '''
+    for following in user.get_following():
+        content += f'<li>{following}</li>'
+    content += '''
+        </ul>
+    </div>
+    '''
+
+
+    # use post_to_html but with only the posts of the user
+    base_html = post_to_html(posts)
+
+    # insert button to delete post where id = post.id
+    base_html.replace('''<input type="submit" value="Like">
+            </form>''', '''<input type="submit" value="Like">
+            </form>
+            <form method="post" action="delete_post">
+                <input type="hidden" name="post_id" value={post.id}>
+                <input type="submit" value="Delete">
+            </form>''')
+    return content + base_html
 
 class BlogView(object):
     def __init__(self):
@@ -137,7 +187,14 @@ class BlogView(object):
         posts.reverse()
         self.posts = posts
         return post_to_html(self.posts)
-    
+
+    @cherrypy.expose
+    def personal_page(self):
+        # get user posts
+        user_posts = [utils.transformPostDataToObject(post) for post in self.model.get_posts_for_user(self.user_id)]
+        user_posts.reverse()
+        return personal_page_html(self.user, user_posts)
+
     @cherrypy.expose
     def my_posts(self):
         posts = [utils.transformPostDataToObject(post) for post in self.model.get_posts_by_author(self.user_id)]
@@ -160,7 +217,7 @@ class BlogView(object):
         Create a post and return to the all posts page
         """
         post = Post(
-            author_id=self.user_id,
+            author_id=self.self.user_id,
             title=title,
             content=content
         )
@@ -176,22 +233,27 @@ class BlogView(object):
         admin = Admin()
         if admin.authenticate(username, password):
             # Authentication successful, render the main page
-            self.user_id = admin.getId(username)
+            self.user = User(
+                username=username,
+                password=password
+            )
+            user_id = self.model.get_user_id_by_username(username)
+            self.user.set_id(user_id)
+            self.user_id = self.user.get_id()
             return self.main_page()
         else:
             # Authentication failed, display an error message on the login page
             error_message = "Invalid username or password. Please try again."
             login_form = login() + f'<p style="color: red;">{error_message}</p>'
             return login_form
-        
-        
+
     @cherrypy.expose
     def registering(self):
         '''
         Function that renders the registration page
         '''
         return register()
-    
+
     @cherrypy.expose
     def do_comment(self, content, post_id):
         reply = Reply(
@@ -212,17 +274,27 @@ class BlogView(object):
         if comments is not None:
             comments = [utils.transformReplyDataToObject(reply) for reply in comments]
             comments.reverse()
-            return comments_to_html(comments)  
+            return comments_to_html(comments)
         else:
-            return "Não há comentarios"
-        
+            return "Nao ha comentarios"
+
+    @cherrypy.expose
+    def do_like(self, post_id):
+        try:
+            self.user.like(post_id)
+            return self.main_page().replace('''<input type="submit" value="Like">''',
+                                            '''<input type="submit" value="Unlike">''')
+        except Exception as e:
+            # dislike
+            self.user.unlike(post_id)
+            return self.main_page()
+
     @cherrypy.expose
     def is_registered(self, username=None, password=None, email=None):
         '''
         Function that registers a user
         '''
         admin = Admin()
-        print(admin.authenticate(username, password))
         if not admin.authenticate(username, password):
             admin.register(username, password, email)
             # redirect to login page
@@ -232,8 +304,8 @@ class BlogView(object):
             error_message = "Nome de usuário em uso. Por favor, tente novamente."
             register_form = register() + f'<p style="color: red;">{error_message}</p>'
             return register_form
-        
-        
+
     @cherrypy.expose
     def print_a(self):
-        print('a')
+        print('.')
+

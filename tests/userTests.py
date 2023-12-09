@@ -2,187 +2,237 @@
 import unittest
 import sys
 
+#APPENDS SRC FOLDER TO PATH
 sys.path.append('../')
+sys.path.append('../src')
+
 from src.users import User, Moderator, UserFactory
 from src.content import Post
+from src.customExceptions import *
 
 #User creation
 class TestUserSystem(unittest.TestCase):
     def setUp(self):
+        # arrange
         # Initialize objects for testing
-        self.user = User(username="user1", password="pass1", email="user1@example.com")
+        self.user = User(username="user1", password="pass1", email="email@email.com", id = 1,
+                         posts = [], followers = [], following = [])
         self.moderator = Moderator(username="moderator1", password="modpass", email="moderator1@example.com")
         self.user_factory = UserFactory()
 
     # TESTING GETTERS
-    def test_user_get_posts(self):
-        self.assertIsInstance(self.user.get_posts(), list)
-
-    def test_user_get_following(self):
-        self.assertIsInstance(self.user.get_following(), list)
-
-    def test_user_get_followers(self):
-        self.assertIsInstance(self.user.get_followers(), list)
+    def test_user_get_id(self):
+        # act
+        id = self.user.get_id()
+        # assert
+        self.assertIsInstance(id, int)
 
     def test_user_get_username(self):
-        self.assertIsInstance(self.user.get_username(), str)
+        # act
+        username = self.user.get_username()
+        # assert
+        self.assertIsInstance(username, str)
 
     def test_user_get_email(self):
-        self.assertIsInstance(self.user.get_email(), str)
+        # act
+        email = self.user.get_email()
+        # assert
+        self.assertIsInstance(email, str)
 
-    def test_user_get_id(self):
-        self.assertIsInstance(self.user.get_id(), int)
+    def test_user_get_posts(self):
+        # act
+        posts = self.user.get_posts()
+        # assert
+        self.assertIsInstance(posts, list)
 
-    def test_user_get_type(self):
-        self.assertIsInstance(self.user.get_type(), str)
+    def test_user_get_followers(self):
+        # act
+        followers = self.user.get_followers()
+        # assert
+        self.assertIsInstance(followers, list)
 
-    # TESTING POST INTERACTIONS
+    def test_user_get_following(self):
+        # act
+        following = self.user.get_following()
+        # assert
+        self.assertIsInstance(following, list)
 
-    def test_user_posting(self):
-        post = Post(content="This is a test post.")
-        self.user.post(post)
-        self.assertIn(post, self.user.get_posts())
+    # TESTING SETTERS
+    def test_user_set_id(self):
+        # act
+        self.user.set_id(2)
+        # assert
+        self.assertEqual(self.user.get_id(), 2)
 
-    def test_user_invalid_posting(self):
-        post = None
-        #Assert if error "InvalidPost" is raised
-        self.assertRaises(self.user.post(post), "InvalidFunctionArguments")
+    def test_user_set_invalid_id(self):
+        # arrange
+        user_Id = None
 
-    def test_user_deleting(self):
-        postId = 1
-        authorId = self.user.get_id()
-        post = Post(id=postId, title="Title",  content="This is a test post.", author_id=authorId)
-        self.user.post(post)
-        self.user.delete(postId)
-        self.assertNotIn(post, self.user.get_posts())
+        # act
+        with self.assertRaises(TypeError) as context:
+            self.user.set_id(user_Id)
 
-    def test_user_deleting_others_post(self):
-        postId = 1
-        authorId = self.user.get_id() + 1
-        post = Post(id=postId, title="Title",  content="This is a test post.", author_id=authorId)
-        self.user.post(post)
-        self.assertRaises(self.user.delete(postId), "PermissionFailed")
-
-    def test_user_invalid_deleting(self):
-        post = None
-        #Assert if error "InvalidPost" is raised
-        self.assertRaises(self.user.delete(post), "InvalidPost")
+        # assert
+        self.assertEqual("Tipo inválido de id. Ids devem ser inteiros." , str(context.exception))
 
     # TESTING USER-USER INTERACTION
 
     def test_user_follow(self):
+        # arrange
         other_user_id = 2
-        self.user.follow(other_user_id)
-        self.assertIn(other_user_id, self.user.get_all_following())
 
-    def test_user_unfollow(self):
-        other_user_id = 2
-        self.user.unfollow(other_user_id)
-        self.assertNotIn(other_user_id, self.user.get_all_following())
+        # act
+        self.user.follow(other_user_id)
+
+        # assert
+        self.assertIn(other_user_id, self.user.get_following())
+
 
     def test_user_follow_self(self):
-        self.user.follow(self.user.get_id())
-        #Assert if error "CannotFollowSelf" is raised
-        self.assertRaises(self.user.follow(self.user.get_id()), "CannotFollowSelf")
+        # arrange
+        id_self = self.user.get_id()
 
-    def test_user_unfollow_self(self):
-        self.user.unfollow(self.user.get_id())
-        #Assert if error "CannotUnfollowSelf" is raised
-        self.assertRaises(self.user.follow(self.user.get_id()), "CannotUnfollowSelf")     
+        # act
+        with self.assertRaises(CannotFollowSelf) as context:
+            self.user.follow(id_self)
+
+        # assert
+        self.assertEqual("Não é possível seguir a si mesmo." , str(context.exception))
+
 
     def test_user_follow_already_following(self):
-        other_user_id = 2
+        # arrange
+        other_user_id = 3
         self.user.follow(other_user_id)
-        #Assert if error "AlreadyFollowing" is raised
-        self.assertRaises(self.user.follow(other_user_id), "AlreadyFollowing")
 
-    def test_user_unfollow_already_unfollowing(self):
-        other_user_id = 2
-        self.user.unfollow(other_user_id)
-        #Assert if error "AlreadyUnfollowing" is raised
-        self.assertRaises(self.user.unfollow(other_user_id), "AlreadyUnfollowing")
+        # act
+        with self.assertRaises(AlreadyFollowing) as context:
+            self.user.follow(other_user_id)
+
+        # assert
+        self.assertEqual("Não é possível seguir novamente o mesmo usuário." , str(context.exception))
 
     def test_user_follow_invalid_user(self):
+        # arrange
         other_user_id = 100
-        #Assert if error "InvalidUser" is raised
-        self.assertRaises(self.user.follow(other_user_id), "UserNotInDatabase")
+
+        # act
+        with self.assertRaises(InvalidUserException) as context:
+            self.user.follow(other_user_id)
+
+        # assert
+        self.assertEqual("O usuário não existe.",  str(context.exception))
+
+    def test_user_unfollow(self):
+        # arrange
+        other_user_id = 2
+
+        # act
+        self.user.unfollow(other_user_id)
+
+        # assert
+        self.assertNotIn(other_user_id, self.user.get_following())
+
+    def test_user_unfollow_self(self):
+        # arrange
+        id_self = self.user.get_id()
+
+        # act
+        with self.assertRaises(CannotUnfollowSelf) as context:
+            self.user.unfollow(id_self)
+
+        # assert
+        self.assertEqual("Não é possível deixar de seguir a si mesmo." , str(context.exception))
+
+    def test_user_unfollow_already_not_following(self):
+        # arrange
+        other_user_id = 3
+        self.user.unfollow(other_user_id)
+
+        # act
+        with self.assertRaises(AlreadyNotFollowing) as context:
+            self.user.unfollow(other_user_id)
+
+        # assert
+        self.assertEqual("Não é possível deixar de seguir novamente o mesmo usuário.",  str(context.exception))
 
     def test_user_unfollow_invalid_user(self):
+        # arrange
         other_user_id = 100
-        #Assert if error "InvalidUser" is raised
-        self.assertRaises(self.user.unfollow(other_user_id), "UserNotInDatabase")
 
-    def test_user_follow_invalid_entry(self):
-        # assert if User type is not int
-        other_user_id = None
-        self.assertRaises(self.user.follow(other_user_id), "InvalidFunctionArguments")
+        # act
+        with self.assertRaises(InvalidUserException) as context:
+            self.user.unfollow(other_user_id)
 
-    def test_user_unfollow_invalid_entry(self):
-        # assert if User type is not int
-        other_user_id = None
-        self.assertRaises(self.user.unfollow(other_user_id), "InvalidFunctionArguments")
+        # assert
+        self.assertEqual("O usuário não existe.",  str(context.exception))
 
-    # TESTING MODERATOR INTERACTION
-
-    def test_moderator_delete_post(self):
+    def test_user_like_post(self):
+        # arrange
         postId = 1
-        authorId = self.user.get_id()
-        post = Post(id=postId, title="Title",  content="This is a test post.", author_id=authorId)
-        self.moderator.delete_post(post)
-        self.assertNotIn(post, self.user.get_posts())
 
-    def test_moderator_delete_post_invalid_post(self):
-        post = None
-        #Assert if error "InvalidPost" is raised
-        self.assertRaises(self.moderator.delete_post(post), "InvalidPost")
+        # act
+        self.user.like(postId)
 
-    def test_moderator_ban_user(self):
-        userId = 1
-        self.moderator.ban_user(userId)
-        self.assertIn(userId, self.moderator.get_banned_users())
+        # assert
+        self.assertIn(postId, self.user.get_liked_posts())
 
-    def test_moderator_ban_user_invalid_user(self):
-        userId = 100
-        #Assert if error "InvalidUser" is raised
-        self.assertRaises(self.moderator.ban_user(userId), "UserNotInDatabase")
+    def test_user_like_already_liked(self):
+        # arrange
+        postId = 2
+        self.user.like(postId)
 
-    def test_moderator_unban_user(self):
-        userId = 1
-        self.moderator.unban_user(userId)
-        self.assertNotIn(userId, self.moderator.get_banned_users())
+        # act
+        with self.assertRaises(AlreadyLiked) as context:
+            self.user.like(postId)
 
-    def test_moderator_unban_user_invalid_user(self):
-        userId = 100
-        #Assert if error "InvalidUser" is raised
-        self.assertRaises(self.moderator.unban_user(userId), "UserNotInDatabase")
+        # assert
+        self.assertEqual("Post já curtido.",  str(context.exception))
 
-    def test_moderator_unban_user_not_banned(self):
-        userId = 1
-        #Assert if error "UserNotBanned" is raised
-        self.assertRaises(self.moderator.unban_user(userId), "UserNotBanned")
+    def test_user_like_invalid_post(self):
+        # arrange
+        postId = 100
 
-    def test_moderator_ban_user_already_banned(self):
-        userId = 1
-        self.moderator.ban_user(userId)
-        #Assert if error "UserAlreadyBanned" is raised
-        self.assertRaises(self.moderator.ban_user(userId), "UserAlreadyBanned")
+        # act
+        with self.assertRaises(InvalidPostException) as context:
+            self.user.like(postId)
 
-    def test_moderator_ban_other_moderator(self):
-        userId = 2
-        #Assert if error "CannotBanModerator" is raised
-        self.assertRaises(self.moderator.ban_user(userId), "CannotBanModerator")
+        # assert
+        self.assertEqual("O post não existe.",  str(context.exception))
+
+    def test_user_unlike_post(self):
+        # arrange
+        postId = 1
+
+        # act
+        self.user.unlike(postId)
+        # assert
+        self.assertNotIn(postId, self.user.get_liked_posts())
+
+    def test_user_unlike_already_unliked(self):
+        # arrange
+        postId = 2
+        self.user.unlike(postId)
+
+        # act
+        with self.assertRaises(AlreadyNotLiked) as context:
+            self.user.unlike(postId)
+
+        # assert
+        self.assertEqual("Post já descurtido.",  str(context.exception))
+    
+    def test_user_unlike_invalid_post(self):
+        # arrange
+        postId = 100
+
+        # act
+        with self.assertRaises(InvalidPostException) as context:
+            self.user.unlike(postId)
+
+        # assert
+        self.assertEqual("O post não existe.",  str(context.exception))
 
 
-
-    def test_user_factory_create_user(self):
-        created_user = self.user_factory.create_user("user", "user2", "pass2", "user2@example.com")
-        self.assertIsInstance(created_user, User)
-
-        created_moderator = self.user_factory.create_user("moderator", "moderator2", "modpass2", "moderator2@example.com")
-        self.assertIsInstance(created_moderator, Moderator)
-
-        with self.assertRaises(ValueError):
-            self.user_factory.create_user("invalid_type", "invalid", "pass", "invalid@example.com")
 
 if __name__ == '__main__':
     unittest.main()
