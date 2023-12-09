@@ -1,38 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <style>
-        body {
-            font-family: sans-serif;
-        }
-        h1 {
-            text-align: center;
-        }
-        .blog-post {
-            background-color: #fff;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            margin: 20px;
-            padding: 20px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .blog-post-title {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: #333;
-        }
-
-        .blog-post-content {
-            margin-top: 10px;
-            color: #666;
-        }
-
-        .blog-post-meta {
-            margin-top: 15px;
-            color: #888;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 
     <script>
     // Function to check if the user has scrolled to the bottom
@@ -58,8 +27,15 @@
 
     <title>Bloggster</title>
 </head>
-<body>
-    <h1>Bloggster</h1>
-
+<body class="container">
+    <div class="header">
+        <div class="logo">Bloggster</div>
+        <!-- <div class="user-info">Bem-vindo, {user_info}</div>-->
+        <div class="navigation" style="text-align: center;">
+            <a href="/main_page">Home</a> |
+            <a href="/new_post">Escrever novo post</a> |
+            <a href="/my_posts">Meus Posts</a> 
+        </div>
+    </div>
 </body>
 </html>

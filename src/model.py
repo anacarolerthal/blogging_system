@@ -52,6 +52,11 @@ class BlogModel:
         self.cursor.execute('SELECT * FROM Post')
         return self.cursor.fetchall()
     
+    # create a function to get posts by author
+    #def get_posts_by_author(self, author_id):
+    #    self.cursor.execute('SELECT * FROM Post WHERE author_id = %s', (author_id,))
+    #    return self.cursor.fetchall()
+    
     def get_n_posts(self, n, offset=0):
         self.cursor.execute('SELECT * FROM Post LIMIT %s OFFSET %s', (n, offset))
         return self.cursor.fetchall()
