@@ -2,7 +2,8 @@ from abc import ABC, abstractmethod
 from typing import *
 
 from src.content import Post
-#from model import BlogModel
+from src.model import BlogModel
+from src.customExceptions import *
 
 
 class BaseUser(ABC):
@@ -69,27 +70,49 @@ class User(BaseUser):
 
     def get_followers(self) -> List[int]:
         """Get the followers of the user"""
+        id_self = self.get_id()
+        follower_list = BlogModel().get_followers_user(id_self)
+        self.__followers = [user for user in follower_list]
         return self.__followers
 
     def get_following(self) -> List[int]:
         """Get the following of the user"""
+        id_self = self.get_id()
+        following_list = BlogModel().get_following_user(id_self)
+        self.__following = [user for user in following_list]
         return self.__following
 
-
-    def post(self, post: Post) -> None:
-        """Post a post"""
-        pass  
-
-    def delete_post(self, post_id: int) -> None:
-        """Delete a post"""
-        pass
+    def set_id(self, user_id):
+        if type(user_id) != int:
+            raise TypeError("Tipo inválido de id. Ids devem ser inteiros.")
+        self.__id = user_id
 
     def like(self, post_id: int) -> None:
         """Like a post"""
         pass
 
-    def follow(self, user_id: int) -> None:
+    def follow(self, followee_id: int) -> None:
         """Follow a user"""
+        if followee_id == self.get_id():
+            raise CannotFollowSelf()
+
+        if followee_id in self.get_following():
+            raise AlreadyFollowing()
+
+        id_self = self.get_id()
+        BlogModel().follow(id_self, followee_id)
+        pass
+
+    def unfollow(self, followee_id: int) -> None:
+        """Unfollow a user"""
+        if followee_id == self.get_id():
+            raise CannotUnfollowSelf()
+
+        if followee_id not in self.get_following():
+            raise AlreadyNotFollowing()
+
+        id_self = self.get_id()
+        BlogModel().unfollow(id_self, followee_id)
         pass
 
 class Moderator(BaseUser):
