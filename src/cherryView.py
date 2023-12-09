@@ -13,6 +13,7 @@ with open('html/base_html.html', 'r') as f:
 
 def post_to_html(posts):
     content = """
+    <a href="personal_page">Meu perfil</a>
     <form method="post" action="create_post">
         <input type="text" name="title" placeholder="Sobre o que voce quer falar?">
         <input type="text" name="content" placeholder="Disserte sobre o assunto">
@@ -99,6 +100,20 @@ def register():
     return base_html.replace('''</body>
 </html>''', content)
 
+def personal_page_html(user, posts):
+
+    # use post_to_html but with only the posts of the user
+    base_html = post_to_html(posts)
+
+    # insert button to delete post where id = post.id
+    base_html.replace('''<input type="submit" value="Like">
+            </form>''', '''<input type="submit" value="Like">
+            </form>
+            <form method="post" action="delete_post">
+                <input type="hidden" name="post_id" value={post.id}>
+                <input type="submit" value="Delete">
+            </form>''')
+    return base_html
 
 class BlogView(object):
     def __init__(self):
@@ -118,6 +133,12 @@ class BlogView(object):
         return post_to_html(self.posts)
 
     @cherrypy.expose
+    def personal_page(self):
+        # get user posts
+        user_posts = [utils.transformPostDataToObject(post) for post in self.model.get_posts_for_user(self.user_id)]
+        return personal_page_html(self.user, user_posts)
+
+    @cherrypy.expose
     def create_post(self, title, content):
         """
         Create a post and return to the all posts page
@@ -131,7 +152,6 @@ class BlogView(object):
         id = post.publish()
         return self.main_page()
 
-
     @cherrypy.expose
     def is_authenticated(self, username=None, password=None):
         '''
@@ -142,7 +162,6 @@ class BlogView(object):
             # Authentication successful, render the main page
             self.user_id = admin.getId(username)
             self.user = User(
-                id=self.user_id,
                 username=username,
                 password=password
             )
@@ -201,7 +220,6 @@ class BlogView(object):
         Function that registers a user
         '''
         admin = Admin()
-        print(admin.authenticate(username, password))
         if not admin.authenticate(username, password):
             admin.register(username, password, email)
             # redirect to login page
