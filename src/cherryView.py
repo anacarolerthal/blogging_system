@@ -5,13 +5,24 @@ from users import User
 from model import BlogModel
 import utils
 import re
+import os
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+static_dir = os.path.join(current_dir, 'html')
+static_dir = os.path.abspath(static_dir)
+
+cherrypy.config.update({
+    'tools.staticdir.on': True,
+    'tools.staticdir.dir': static_dir,
+    })
 
 # read base_html file
-with open('html/base_html.html', 'r') as f:
+with open(os.path.join(static_dir, 'base_html.html'), 'r') as f:
     base_html = f.read()
 
 
 def post_to_html(posts):
+
     content = """
     <a href="personal_page">Meu perfil</a>
     <form method="post" action="create_post">
@@ -33,9 +44,9 @@ def post_to_html(posts):
             <span>Date: {post.date}</span>
         </div>
         <div class="blog-post-do-comment">
-            <form method="post" action="do_comment">
+            <form method="post" action="do_comment" class="new-comment-form">
                 <input type="hidden" name="post_id" value={post.id}>
-                <input type="text" name="content" placeholder="Comente sobre">
+                <textarea type="text" id="content" name="content" placeholder="Comente sobre" rows="4" required></textarea>
                 <input type="submit" value="Comentar">
             </form>
             <form method="post" action="do_like">
@@ -44,12 +55,30 @@ def post_to_html(posts):
             </form>
         </div>
         <div class="blog-post-comments">
-            Veja os <a href="get_post_comments/postId={post.id}">comentarios</a>
+            Veja os <a href="get_post_comments/postId={post.id}">comentários</a>
         </div>
     </div>
 </body>
 </html>
 '''
+    return base_html.replace('''</body>
+</html>''', content)
+
+def new_post_to_html():
+    # Renderiza a página para criar uma nova postagem
+    content = """
+    <form method="post" action="create_post" class="new-post-form">
+        <label for="title">Título:</label>
+        <input type="text" id="title" name="title" placeholder="Sobre o que voce quer falar?" required>
+
+        <label for="content">Conteúdo:</label>
+        <textarea type="text" id="content" name="content" placeholder="Disserte sobre o assunto" rows="10" required></textarea>
+
+        <label for="tags">Tags:</label>
+
+        <input type="submit" value="Postar">
+    </form>    
+    """
     return base_html.replace('''</body>
 </html>''', content)
 
@@ -57,43 +86,46 @@ def comments_to_html(comments):
     content = ''
     for comment in comments:
         content += f'''
-        <div class="comment-meta">
-            <span>Author: {comment.author_id}</span> |
-            <span>Date: {comment.date}</span>
+        <div class="comment">
+            <div class="comment-meta">
+                <span>Author: {comment.author_id}</span> |
+                <span>Date: {comment.date}</span>
+            </div>
+            <div class="comment-content">
+                <p>{comment.content}</p>
+            </div>
         </div>
-    <div class="comment">
-        <div class="comment-content">
-            <p>{comment.content}</p>
-    </div>
-</body>
-</html>
-'''
+    </body>
+    </html>
+    '''
     return base_html.replace('''</body>
 </html>''', content)
 
-
 def login():
     content = '''
+    <h1 style="text-align: center;">Login</h1>
     <form method="post" action="is_authenticated">
         <input type="text" name="username" placeholder="Username">
         <input type="password" name="password" placeholder="Password">
         <input type="submit" value="Login">
     </form>
-    Se você não tem uma conta, <a href="registering">registre-se</a>.
+    <p style="text-align: center;">Se você ainda não tem uma conta, <a href="registering">registre-se</a>.</p>
     </body>
 </html>
     '''
     return base_html.replace('''</body>
 </html>''', content)
-
+ 
 def register():
     content = '''
+    <h1 style="text-align: center;">Registre-se</h1>
     <form method="post" action="is_registered">
         <input type="text" name="username" placeholder="Username">
         <input type="password" name="password" placeholder="Password">
         <input type="email" name="email" placeholder="Email">
         <input type="submit" value="Register">
     </form>
+    <p style="text-align: center;">Já possui uma conta? Faça <a href="http://localhost:8080/">login</a>.</p>
     </body>
 </html>
     '''
@@ -163,6 +195,22 @@ class BlogView(object):
         user_posts.reverse()
         return personal_page_html(self.user, user_posts)
 
+    @cherrypy.expose
+    def my_posts(self):
+        posts = [utils.transformPostDataToObject(post) for post in self.model.get_posts_by_author(self.user_id)]
+        posts.reverse()
+        self.posts = posts
+        # se o usuario nao tiver posts, exibe uma mensagem
+        if len(posts) == 0:
+            content = '''<p>Você ainda não tem posts publicados. Vá em <a href=http://localhost:8080/new_post>Escrever novo post</a> para começar a blogar!</p>'''
+            return base_html.replace('''</body>
+                                     </html>''', content)
+        return post_to_html(self.posts)
+    
+    @cherrypy.expose
+    def new_post(self):
+        return new_post_to_html()
+    
     @cherrypy.expose
     def create_post(self, title, content):
         """
