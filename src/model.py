@@ -1,10 +1,10 @@
 #Data Layer - conexao com o banco
 import psycopg2
 
-#def
-#DATABASE_URL = "postgres://wxishrvi:2bKsBjBn5-hrqFKFb79grU1Kl71n9ext@isabelle.db.elephantsql.com/wxishrvi"
-#user postgres, password admin, database blogdb
-DATABASE_URL = "postgres://postgres:admin@localhost:5432/blogdb"
+DATABASE_URL = "postgres://wxishrvi:2bKsBjBn5-hrqFKFb79grU1Kl71n9ext@isabelle.db.elephantsql.com/wxishrvi"
+# #user postgres, password admin, database blogdb
+# DATABASE_URL = "postgres://postgres:admin@localhost:5432/blogdb"
+
 #singleton to ensure just one connection
 class Singleton:
     def __init__(self, cls):
@@ -22,7 +22,7 @@ class Singleton:
 
     def __instancecheck__(self, inst):
         return isinstance(inst, self._cls)
-    
+
 @Singleton
 class DBConnection():
     def __init__(self):
@@ -32,7 +32,7 @@ class BlogModel:
     def __init__(self):
         self.connection = DBConnection.Instance().connection
         self.cursor = self.connection.cursor()
-        
+
     # def __del__(self):
     #     self.cursor.close()
     #     self.connection.close()
@@ -69,14 +69,18 @@ class BlogModel:
 
     def get_user_id_by_username(self, username):
         self.cursor.execute('SELECT id FROM baseuser WHERE username = %s', (username, ))
-        return self.cursor.fetchone()
+        return int(self.cursor.fetchone()[0])
 
     def add_user(self, username, password, email):
         self.cursor.execute('INSERT INTO baseuser (username, passw, email, is_moderator) VALUES (%s, %s, %s, %s) RETURNING id', (username, password, email, False))
         user_id = self.cursor.fetchone()[0]
         self.connection.commit()
         return user_id
-    
+
+    def get_posts_for_user(self, user_id):
+        self.cursor.execute('SELECT * FROM Post WHERE author_id = %s', (user_id,))
+        return self.cursor.fetchall()
+
     ########### follow ##############
 
     def follow(self, follower, followee):
