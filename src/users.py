@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import *
 
-from src.content import Post
-from src.model import BlogModel
-from src.customExceptions import *
+from content import Post
+from model import BlogModel
+from customExceptions import *
 
 
 class BaseUser(ABC):
@@ -39,7 +39,7 @@ class User(BaseUser):
     def __init__(self,
                  username: str,
                  password: str,
-                 email: str,
+                 email: str = None,
                  id: int = None,
                  posts: List[int] = None, 
                  followers: List[int] = None,
@@ -92,7 +92,7 @@ class User(BaseUser):
         if type(user_id) != int:
             raise TypeError("Tipo inválido de id. Ids devem ser inteiros.")
         self.__id = user_id
-        pass 
+        pass
 
     def like(self, post_id: int) -> None:
         """Like a post"""
