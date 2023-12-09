@@ -32,8 +32,6 @@ class BlogController:
         username, password, email = self.view.register()
         self.model.create_user(username, password, email)
 
-    def print_a(self):
-        print('a')
 
 if __name__ == '__main__':
     db = model.BlogModel()
