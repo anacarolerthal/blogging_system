@@ -88,10 +88,11 @@ class User(BaseUser):
         liked_posts = BlogModel().get_all_liked_posts_by_user(id_self)
         return liked_posts
 
-    def set_id(self, user_id):
+    def set_id(self, user_id) -> None:
         if type(user_id) != int:
             raise TypeError("Tipo inválido de id. Ids devem ser inteiros.")
         self.__id = user_id
+        pass 
 
     def like(self, post_id: int) -> None:
         """Like a post"""
@@ -102,7 +103,6 @@ class User(BaseUser):
             raise AlreadyLiked()
 
         BlogModel().like(self.get_id(), post_id)
-
         pass
 
     def follow(self, followee_id: int) -> None:
