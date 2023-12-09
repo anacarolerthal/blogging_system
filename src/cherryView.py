@@ -2,6 +2,7 @@ import cherrypy
 from admin import Admin
 from content import Post, Reply
 from users import User
+from tags import Tag
 from model import BlogModel
 import utils
 import re
@@ -28,6 +29,7 @@ def post_to_html(posts):
     <form method="post" action="create_post">
         <input type="text" name="title" placeholder="Sobre o que voce quer falar?">
         <input type="text" name="content" placeholder="Disserte sobre o assunto">
+        <input type="text" name="tags" placeholder="Tags">
         <input type="submit" value="Postar">
     </form>
     """
@@ -42,6 +44,7 @@ def post_to_html(posts):
         <div class="blog-post-meta">
             <span>Author: {post.author_id}</span> |
             <span>Date: {post.date}</span>
+            <span>Tags: {post.tags}</span>
         </div>
         <div class="blog-post-do-comment">
             <form method="post" action="do_comment" class="new-comment-form">
@@ -77,7 +80,7 @@ def new_post_to_html():
         <label for="tags">Tags:</label>
 
         <input type="submit" value="Postar">
-    </form>    
+    </form>
     """
     return base_html.replace('''</body>
 </html>''', content)
@@ -115,7 +118,7 @@ def login():
     '''
     return base_html.replace('''</body>
 </html>''', content)
- 
+
 def register():
     content = '''
     <h1 style="text-align: center;">Registre-se</h1>
@@ -157,7 +160,6 @@ def personal_page_html(user, posts):
     </div>
     '''
 
-
     # use post_to_html but with only the posts of the user
     base_html = post_to_html(posts)
 
@@ -184,45 +186,69 @@ class BlogView(object):
     @cherrypy.expose
     def main_page(self):
         posts = [utils.transformPostDataToObject(post) for post in self.model.get_all_posts()]
-        posts.reverse()
-        self.posts = posts
+        # get post tags
+        tagged_posts =[]
+        for post in posts:
+            tag_ids = self.model.get_tags_for_post(post.id)
+            print(tag_ids)
+            # get tag names from tag ids
+            tags = []
+            for tag_id in tag_ids:
+                tags.append(self.model.get_tag_name_by_id(tag_id))
+            # add tags to post
+            post.tags = tags
+            tagged_posts.append(post)
+        tagged_posts.reverse()
+        self.posts = tagged_posts
         return post_to_html(self.posts)
 
     @cherrypy.expose
     def personal_page(self):
         # get user posts
         user_posts = [utils.transformPostDataToObject(post) for post in self.model.get_posts_for_user(self.user_id)]
-        user_posts.reverse()
-        return personal_page_html(self.user, user_posts)
+        tagged_user_posts =[]
+        # get post tags
+        for post in user_posts:
+            tag_ids = self.model.get_tags_for_post(post.id)
+            # get tag names from tag ids
+            tags = []
+            for tag_id in tag_ids:
+                tags.append(self.model.get_tag_name_by_id(tag_id))
+            # add tags to post
+            post.tags = tags
+            tagged_user_posts.append(post)
+        tagged_user_posts.reverse()
+        return personal_page_html(self.user, tagged_user_posts)
 
-    @cherrypy.expose
-    def my_posts(self):
-        posts = [utils.transformPostDataToObject(post) for post in self.model.get_posts_by_author(self.user_id)]
-        posts.reverse()
-        self.posts = posts
-        # se o usuario nao tiver posts, exibe uma mensagem
-        if len(posts) == 0:
-            content = '''<p>Você ainda não tem posts publicados. Vá em <a href=http://localhost:8080/new_post>Escrever novo post</a> para começar a blogar!</p>'''
-            return base_html.replace('''</body>
-                                     </html>''', content)
-        return post_to_html(self.posts)
-    
     @cherrypy.expose
     def new_post(self):
         return new_post_to_html()
-    
+
     @cherrypy.expose
-    def create_post(self, title, content):
+    def create_post(self, title, content, tags):
         """
         Create a post and return to the all posts page
         """
+        post_tags = []
+        # for each word in tags, create a tag object and publish it
+        for tag in tags.split():
+            print(tag)
+            tg = Tag(tag_name=tag)
+            tg.publish()
+            post_tags.append(tag)
+
+        print(post_tags)
+
         post = Post(
-            author_id=self.self.user_id,
+            author_id=self.user_id,
             title=title,
-            content=content
+            content=content,
+            tags=post_tags
         )
 
-        id = post.publish()
+        print(post.tags)
+
+        post.publish()
         return self.main_page()
 
     @cherrypy.expose

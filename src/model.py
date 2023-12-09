@@ -152,8 +152,7 @@ class BlogModel:
         return bool(self.cursor.fetchone())
 
     def create_tag(self, tag_name):
-        self.cursor.execute('INSERT INTO tag (tag_name) VALUES (%s) RETURNING tag_id', 
-                            (tag_name,))
+        self.cursor.execute('INSERT INTO tag (tag_name) VALUES (%s) RETURNING tag_id', (tag_name,))
         tag_id = self.cursor.fetchone()[0]
         self.connection.commit()
         return tag_id
@@ -161,3 +160,19 @@ class BlogModel:
     def create_tagged_post(self, post_id, tag_id):
         self.cursor.execute('INSERT INTO posttag (post_id, tag_id) VALUES (%s,%s)', (post_id, tag_id))
         self.connection.commit()
+
+    def get_tags_for_post(self, post_id):
+        self.cursor.execute('SELECT tag_id FROM posttag WHERE post_id = %s', (post_id,))
+        out = self.cursor.fetchall()
+        tag_id_list = []
+        for tag_id in out:
+            tag_id_list.append(tag_id[0])
+        return tag_id_list
+    
+    def get_tag_name_by_id(self, tag_id):
+        self.cursor.execute('SELECT tag_name FROM tag WHERE tag_id = %s', (tag_id,))
+        return self.cursor.fetchone()
+    
+    def get_tag_id_by_name(self, tag_name):
+        self.cursor.execute('SELECT tag_id FROM tag WHERE tag_name = %s', (tag_name,))
+        return int(self.cursor.fetchone()[0])
