@@ -4,6 +4,7 @@ from content import Post, Reply
 from users import User
 from tags import Tag
 from model import BlogModel
+from customExceptions import *
 import utils
 import re
 import os
@@ -28,13 +29,17 @@ def post_to_html(posts, user=None, n_followers=None, n_following=None):
         <div class="user-info">
             <h2>Bem-vindo ao Bloggster!</h2>
             <h3>Seguidores: {n_followers} | Seguindo: {n_following} |  <a href="/followers_page">Ver</a></h3>
+            <form method="post" action="/do_follow">
+                <input type="hidden" name="user_id" value={user.get_id()}>
+                <input type="submit" value="Seguir">
+            </form>
             <p>Deseja escrever uma <a href="http://localhost:8080/new_post">Nova Postagem</a>?</p>
         </div>
         '''
     else:
         content = """
         <h1 style="text-align: center;">Bem-vindo ao Bloggster!</h1>
-        <p style="text-align: center;">Deseja escrever uma <a href="http://localhost:8080/new_post">Nova Postagem</a>?</p>  
+        <p style="text-align: center;">Deseja escrever uma <a href="http://localhost:8080/new_post">Nova Postagem</a>?</p>
         """
 
     for post in posts:
@@ -282,21 +287,16 @@ class BlogView(object):
         post_tags = []
         # for each word in tags, create a tag object and publish it
         for tag in tags.split():
-            print(tag)
             tg = Tag(tag_name=tag)
             tg.publish()
             post_tags.append(tag)
 
-        print(post_tags)
-        
         post = Post(
             author_id=self.user_id,
             title=title,
             content=content,
             tags=post_tags
         )
-
-        print(post.tags)
 
         post.publish()
         return self.main_page()
@@ -340,6 +340,27 @@ class BlogView(object):
         query_string = "postId="+post_id
         id = reply.publish()
         return self.get_post_comments(query_string)
+    
+    @cherrypy.expose
+    def do_follow(self, user_id):
+        try:
+            self.user.follow(int(user_id))
+            # return to that user's page
+            return self.users_page(int(user_id))
+        except AlreadyFollowing as e:
+            # unfollow
+            print("exception")
+            self.user.unfollow(int(user_id))
+            return self.users_page(int(user_id))
+        except FollowInvalidUser as e:
+            # invalid user
+            return self.users_page(int(user_id))
+        except CannotFollowSelf as e:
+            # cannot follow self 
+            # add message to page
+            return self.users_page(int(user_id)) + '<p style="text-align: center;">Não é possível seguir a si mesmo.</p>'
+
+
 
     @cherrypy.expose
     def get_post_comments(self, postId):
