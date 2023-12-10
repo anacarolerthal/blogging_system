@@ -4,7 +4,12 @@ from typing import *
 from content import Post
 from model import BlogModel
 from customExceptions import *
+from followListener import setup_follow_event
+from event import Event
+from utils import transformUserDataToObject
 
+listener = Event()
+setup_follow_event()
 
 class BaseUser(ABC):
     """Abstract class for a user
@@ -122,16 +127,17 @@ class User(BaseUser):
         if not BlogModel().check_if_user_in_db(followee_id):
             raise InvalidUserException()
 
-        if followee_id == self.get_id():
+        elif followee_id == self.get_id():
             raise CannotFollowSelf()
 
-        if followee_id in self.get_following():
+        elif followee_id in self.get_following():
             print(True)
             raise AlreadyFollowing()
+        else:
+            id_self = self.get_id()
+            BlogModel().follow(id_self, followee_id)
+          listener.post_event("follow", self, transformUserDataToObject(BlogModel.get_user_by_id(followee_id)))
 
-
-        id_self = self.get_id()
-        BlogModel().follow(id_self, followee_id)
         pass
 
     def unfollow(self, followee_id: int) -> None:
@@ -142,6 +148,8 @@ class User(BaseUser):
 
         if followee_id == self.get_id():
             raise CannotUnfollowSelf()
+        
+        print(self.get_following)
 
         if followee_id not in self.get_following():
             raise AlreadyNotFollowing()

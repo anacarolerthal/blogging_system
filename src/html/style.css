@@ -200,6 +200,19 @@ a:hover {
     color: #888;
 }
 
+.comment {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    padding: 20px;
+    max-width: 800px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
 .comment-post {
     background-color: #fff;
     border: 1px solid #ddd;
