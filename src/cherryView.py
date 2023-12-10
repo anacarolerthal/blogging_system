@@ -109,6 +109,61 @@ def comments_to_html(comments):
     return base_html.replace('''</body>
 </html>''', content)
 
+def tag_search_html():
+    content = '''
+    <h1 style="text-align: center;">Search by tag</h1>
+    <form method="post" action="tag_search_result">
+        <input type="text" name="tag" placeholder="Tag">
+        <input type="submit" value="Search">
+    </form>
+    </body>
+</html>
+    '''
+    return base_html.replace('''</body>
+</html>''', content)
+
+def tag_search_result_html(posts):
+    content = '''
+    <h1 style="text-align: center;">Search by tag</h1>
+    <form method="post" action="tag_search_result">
+        <input type="text" name="tag" placeholder="Tag">
+        <input type="submit" value="Search">
+    </form>
+    '''
+    for post in posts:
+        content += f'''
+    <div class="blog-post">
+        <div class="blog-post-title">{post.title}</div>
+        <div class="blog-post-content">
+            <p>{post.content}</p>
+            <p>More content goes here...</p>
+        </div>
+        <div class="blog-post-meta">
+            <span>Author: {post.author_id}</span> |
+            <span>Date: {post.date}</span>
+            <span>Tags: {post.tags}</span>
+        </div>
+        <div class="blog-post-do-comment">
+            <form method="post" action="do_comment" class="new-comment-form">
+                <input type="hidden" name="post_id" value={post.id}>
+                <textarea type="text" id="content" name="content" placeholder="Comente sobre" rows="4" required></textarea>
+                <input type="submit" value="Comentar">
+            </form>
+            <form method="post" action="do_like">
+                <input type="hidden" name="post_id" value={post.id}>
+                <input type="submit" value="Like">
+            </form>
+        </div>
+        <div class="blog-post-comments">
+            Veja os <a href="get_post_comments/postId={post.id}">comentários</a>
+        </div>
+    </div>
+</body>
+</html>
+'''
+    return base_html.replace('''</body>
+</html>''', content)
+
 def login():
     content = '''
     <h1 style="text-align: center;">Login</h1>
@@ -196,11 +251,11 @@ class BlogView(object):
         tagged_posts =[]
         for post in posts:
             tag_ids = self.model.get_tags_for_post(post.id)
-            print(tag_ids)
             # get tag names from tag ids
             tags = []
             for tag_id in tag_ids:
-                tags.append(self.model.get_tag_name_by_id(tag_id))
+                if tag_id is not None:
+                    tags.append(self.model.get_tag_name_by_id(tag_id))
             # add tags to post
             post.tags = tags
             tagged_posts.append(post)
@@ -221,7 +276,8 @@ class BlogView(object):
             # get tag names from tag ids
             tags = []
             for tag_id in tag_ids:
-                tags.append(self.model.get_tag_name_by_id(tag_id))
+                if tag_id is not None:
+                    tags.append(self.model.get_tag_name_by_id(tag_id))
             # add tags to post
             post.tags = tags
             tagged_user_posts.append(post)
@@ -231,6 +287,37 @@ class BlogView(object):
         if len(tagged_user_posts) == 0:
             return personal_page_html(self.user, tagged_user_posts) + '<p style="text-align: center;">Você ainda não tem nenhuma postagem. Clique em <a href="http://localhost:8080/new_post">"Nova Postagem"</a> para começar a blogar!</p>'
         return personal_page_html(self.user, tagged_user_posts)
+
+    @cherrypy.expose
+    def tags_filter(self):
+        return tag_search_html()
+    
+    @cherrypy.expose
+    def tag_search_result(self, tag):
+        # check if tag exists
+        if not self.model.check_if_tag_in_db(tag):
+            return tag_search_result_html([])
+        # get tag id from tag name
+        tag_id = self.model.get_tag_id_by_name(tag)
+        post_ids = self.model.get_post_id_by_tag(tag_id)
+        # for each post id, get post data
+        posts = []
+        for post_id in post_ids:
+            posts.append(utils.transformPostDataToObject(self.model.get_post_by_post_id(post_id)))
+        tagged_posts =[]
+        # get post tags
+        for post in posts:
+            tag_ids = self.model.get_tags_for_post(post.id)
+            # get tag names from tag ids
+            tags = []
+            for tag_id in tag_ids:
+                if tag_id is not None:
+                    tags.append(self.model.get_tag_name_by_id(tag_id))
+            # add tags to post
+            post.tags = tags
+            tagged_posts.append(post)
+        tagged_posts.reverse()
+        return tag_search_result_html(tagged_posts)
     
     @cherrypy.expose
     def followers_page(self):
@@ -238,7 +325,6 @@ class BlogView(object):
             return login()
         followers = self.user.get_followers()
         return followers_page_html(self.user, followers)
-    
 
     @cherrypy.expose
     def users_page(self, author_id):
@@ -257,7 +343,8 @@ class BlogView(object):
             # get tag names from tag ids
             tags = []
             for tag_id in tag_ids:
-                tags.append(self.model.get_tag_name_by_id(tag_id))
+                if tag_id is not None:
+                    tags.append(self.model.get_tag_name_by_id(tag_id))
             # add tags to post
             post.tags = tags
             tagged_user_posts.append(post)

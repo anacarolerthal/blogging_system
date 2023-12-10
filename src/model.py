@@ -175,8 +175,20 @@ class BlogModel:
     
     def get_tag_name_by_id(self, tag_id):
         self.cursor.execute('SELECT tag_name FROM tag WHERE tag_id = %s', (tag_id,))
-        return self.cursor.fetchone()
+        return self.cursor.fetchone()[0]
     
     def get_tag_id_by_name(self, tag_name):
         self.cursor.execute('SELECT tag_id FROM tag WHERE tag_name = %s', (tag_name,))
         return int(self.cursor.fetchone()[0])
+    
+    def get_post_id_by_tag(self, tag_id):
+        self.cursor.execute('SELECT post_id FROM posttag WHERE tag_id = %s', (tag_id,))
+        out = self.cursor.fetchall()
+        post_id_list = []
+        for post_id in out:
+            post_id_list.append(post_id)
+        return post_id_list
+    
+    def get_post_by_post_id(self, post_id):
+        self.cursor.execute('SELECT * FROM post WHERE id = %s', (post_id,))
+        return self.cursor.fetchone()
