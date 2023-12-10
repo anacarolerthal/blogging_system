@@ -9,6 +9,7 @@ class Command(ABC):
 class DBCommand(Command):
     def __init__(self, db_connection):
         self.connection = db_connection
+        self.cursor = self.connection.cursor()
 
 class CreatePostCommand(DBCommand):
     def __init__(self, db_connection, post):
@@ -16,11 +17,10 @@ class CreatePostCommand(DBCommand):
         self.post = post
 
     def execute(self):
-        cursor = self.db_connection.cursor()
-        cursor.execute('INSERT INTO Post (author_id, title, text_content, image) VALUES (%s, %s, %s, %s) RETURNING id',
+        self.cursor.execute('INSERT INTO Post (author_id, title, text_content, image) VALUES (%s, %s, %s, %s) RETURNING id',
                        (self.post.author_id, self.post.title, self.post.content, self.post.image))
-        id = cursor.fetchone()[0]
-        self.db_connection.commit()
+        id = self.cursor.fetchone()[0]
+        self.connection.commit()
         return id
     
 class CreateTaggedPost(DBCommand):
@@ -192,6 +192,20 @@ class GetFollowingUsersByUserId(DBCommand):
             id_lists.append(id[0])
         return id_lists
 
+class GetFollowerUsersByUserId(DBCommand):
+    def __init__(self, db_connection, user_id):
+        super().__init__(db_connection)
+        self.user_id = user_id
+
+    def execute(self):
+        self.cursor.execute('SELECT follower_id FROM userfollows WHERE followee_id = %s', (self.user_id,))
+        out = self.cursor.fetchall()
+        id_lists = []
+        for id in out:
+            id_lists.append(id[0])
+        return id_lists
+
+
 class CheckUserCommand(DBCommand):
     def __init__(self, db_connection, username, password):
         super().__init__(db_connection)
@@ -255,7 +269,7 @@ class GetUsernameByUserIdCommand(DBCommand):
 
     def execute(self):
         self.cursor.execute('SELECT username FROM baseuser WHERE id = %s', (self.user_id,))
-        return self.cursor.fetchone()[0]
+        return self.cursor.fetchone()
     
 class GetTagIdByNameCommand(DBCommand):
     def __init__(self, db_connection, tag_name):

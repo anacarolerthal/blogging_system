@@ -225,16 +225,20 @@ class BlogModel:
         command = GetPostsLikedByUser(self.connection, user_id)
         return self.execute_command(command)
 
-    def get_posts_from_user(self, user_id):
+    def get_posts_for_user(self, user_id):
         command = GetPostsFromUserCommand(self.connection, user_id)
         return self.execute_command(command)
 
-    def get_comments_of_post(self, post_id):
+    def get_comments_for_post(self, post_id):
         command = GetCommentsOfPostCommand(self.connection, post_id)
         return self.execute_command(command)
 
-    def get_following_users_by_user_id(self, user_id):
+    def get_following_user(self, user_id):
         command = GetFollowingUsersByUserId(self.connection, user_id)
+        return self.execute_command(command)
+
+    def get_followers_user(self, user_id):
+        command = GetFollowerUsersByUserId(self.connection, user_id)
         return self.execute_command(command)
 
     def check_user(self, username, password):
@@ -253,7 +257,7 @@ class BlogModel:
         command = CheckPostAlreadyLiked(self.connection, user_id, post_id)
         return self.execute_command(command)
 
-    def check_tag_already_in_db(self, tag_name):
+    def check_if_tag_in_db(self, tag_name):
         command = CheckTagAlreadyInDB(self.connection, tag_name)
         return self.execute_command(command)
 
