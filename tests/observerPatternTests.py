@@ -2,7 +2,7 @@ import unittest
 import sys
 
 #APPENDS SRC FOLDER TO PATH
-sys.path.append('../src')
+sys.path.append('./src')
 from event import Event
 
 class ObserverPatternSystem(unittest.TestCase):

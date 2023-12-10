@@ -3,12 +3,12 @@ import unittest
 import sys
 
 #APPENDS SRC FOLDER TO PATH
-sys.path.append('../')
-sys.path.append('../src')
+sys.path.append('./src')
 
-from src.users import User, Moderator, UserFactory
-from src.content import Post
-from src.customExceptions import *
+
+from users import User, Moderator, UserFactory
+from content import Post
+from customExceptions import *
 
 #User creation
 class TestUserSystem(unittest.TestCase):
