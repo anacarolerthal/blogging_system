@@ -140,10 +140,8 @@ def tag_search_html():
         <input type="submit" value="Search">
     </form>
     </body>
-</html>
     '''
-    return base_html.replace('''</body>
-</html>''', content)
+    return base_html.replace('''</body>''', content)
 
 def tag_search_result_html(posts):
     content = '''
@@ -182,10 +180,8 @@ def tag_search_result_html(posts):
         </div>
     </div>
 </body>
-</html>
 '''
-    return base_html.replace('''</body>
-</html>''', content)
+    return base_html.replace('''</body>''', content)
 
 def login():
     content = '''
