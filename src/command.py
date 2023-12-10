@@ -302,7 +302,7 @@ class GetPostByPostIdCommand(DBCommand):
         self.cursor.execute('SELECT * FROM post WHERE id = %s', (self.post_id,))
         return self.cursor.fetchone()
     
-class GetUserByUserId(DBCommand):
+class GetUserByUserIdCommand(DBCommand):
     def __init__(self, db_connection, id):
         super().__init__(db_connection)
         self.id = id
@@ -310,4 +310,42 @@ class GetUserByUserId(DBCommand):
     def execute(self):
         self.cursor.execute('SELECT * FROM baseuser WHERE id = %s', (self.id, ))
         return self.cursor.fetchone()[0]
+
+class CheckIfUserIsBannedCommand(DBCommand):
+    def __init__(self, db_connection, id):
+        super().__init__(db_connection)
+        self.id = id
+
+    def execute(self):
+        self.cursor.execute('SELECT bannedy FROM bannedusers WHERE banned_id = %s', (self.id,))
+        return bool(self.cursor.fetchone()[0])
+
+class BanUserCommand(DBCommand):
+    def __init__(self, db_connection, banner_id, banned_id):
+        super().__init__(db_connection)
+        self.banner_id = banner_id
+        self.banned_id = banned_id
+
+    def execute(self):
+        self.cursor.execute('INSERT INTO bannedusers (banner_id, banned_id) VALUES (%s, %s)', (self.banner_id, self.banned_id))
+        self.connection.commit()
+
+class UnbanUserCommand(DBCommand):
+    def __init__(self, db_connection, banner_id, banned_id):
+        super().__init__(db_connection)
+        self.banner_id = banner_id
+        self.banned_id = banned_id
+
+    def execute(self):
+        self.cursor.execute('DELETE FROM bannedusers WHERE banner_id = %s AND banned_id = %s', (self.banner_id, self.banned_id))
+        self.connection.commit()
+
+class DeletePostCommand(DBCommand):
+    def __init__(self, db_connection, post_id):
+        super().__init__(db_connection)
+        self.post_id = post_id
+
+    def execute(self):
+        self.cursor.execute('DELETE FROM post WHERE id = %s', (self.post_id,))
+        self.connection.commit()
 

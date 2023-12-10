@@ -16,7 +16,7 @@ class TestModeratorSystem(unittest.TestCase):
         # Initialize objects for testing
         self.user = User(username="user1", password="pass1", email="email1@.com", id = 1,
                          posts = [1, 2], followers = [], following = [])
-        self.moderator = Moderator(username="moderator1", password="modpass", email="moderator1@example.com")
+        self.moderator = Moderator(id = 2, username="moderator1", password="modpass", email="moderator1@example.com")
         self.user_factory = UserFactory()
 
     # TESTING GETTERS
@@ -58,7 +58,6 @@ class TestModeratorSystem(unittest.TestCase):
         # assert
         self.assertEqual("Tipo inválido de id. Ids devem ser inteiros." , str(context.exception))
 
-
     # TESTING MODERATOR USER INTERACTION
     def test_moderator_delete_post(self):
         # act
@@ -69,41 +68,76 @@ class TestModeratorSystem(unittest.TestCase):
 
     def test_moderator_delete_post_invalid_id(self):
         # act
-        with self.assertRaises(InvalidPostId) as context:
+        with self.assertRaises(InvalidPostException) as context:
             self.moderator.delete_post(3)
 
         # assert
-        self.assertEqual("Post não existe." , str(context.exception))
+        self.assertEqual("O post não existe." , str(context.exception))
 
     def test_moderator_ban_user(self):
+        user = User(username="user", password="pass", email="email@.com", id = 1,
+                    posts = [], followers = [], following = [])
+
         # act
         self.moderator.ban_user(1)
 
-        # assert
+        # assert 
         self.assertEqual(self.user.get_id(), 1)
 
     def test_moderator_ban_user_invalid_id(self):
         # act
-        with self.assertRaises(InvalidUserId) as context:
+        with self.assertRaises(InvalidUserException) as context:
             self.moderator.ban_user(2)
 
         # assert
         self.assertEqual("Usuário não existe." , str(context.exception))
 
-    def test_moderator_unban_user(self):
+    def test_moderator_ban_user_already_banned(self):
+        # arrange
+        user_2 = User(username="user", password="pass", email="email@.com", id = 2,
+                    posts = [], followers = [], following = [])
         # act
-        self.moderator.unban_user(1)
+        self.moderator.ban_user(2)
+        with self.assertRaises(AlreadyBanned) as context:
+            self.moderator.ban_user(2)
 
         # assert
-        self.assertEqual(self.user.get_id(), 1)
+        self.assertEqual("Usuário já banido." , str(context.exception))
+
+    def test_moderator_unban_user(self):
+        # arrange
+        user_3 = User(username="user3", password="pass3", email="email3@.com", id = 3,
+                    posts = [], followers = [], following = [])
+
+        # act
+        self.moderator.ban_user(3)
+        self.moderator.unban_user(3)
+
+        # assert
+        self.assertEqual(user_3.get_id(), 3)
 
     def test_moderator_unban_user_invalid_id(self):
         # act
-        with self.assertRaises(InvalidUserId) as context:
+        with self.assertRaises(InvalidUserException) as context:
             self.moderator.unban_user(2)
 
         # assert
         self.assertEqual("Usuário não existe." , str(context.exception))
+
+    def test_moderator_unban_user_already_unbanned(self):
+        # arrange
+        user_4 = User(username="user4", password="pass4", email="email4@.com", id = 4,
+                    posts = [], followers = [], following = [])
+        self.moderator.ban_user(4)
+        self.moderator.unban_user(4)
+
+        # act
+        with self.assertRaises(AlreadyUnbanned) as context:
+            self.moderator.unban_user(4)
+
+        # assert
+        self.assertEqual("Usuário já desbanido." , str(context.exception))
+
 
 
 
