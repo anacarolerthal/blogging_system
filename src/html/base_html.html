@@ -54,7 +54,7 @@
                 data: {post_id: post_id},
                 dataType: 'json',
                 success: function(response) {
-                    console.log(response);
+                    //console.log(response);
                     if (response.success) {
                         $('#likeButton' + post_id).val(response.updated_button);
                     }
@@ -78,9 +78,11 @@
                 data: {user_id: user_id},
                 dataType: 'json',
                 success: function(response) {
-                    console.log(response);
+                    //console.log(response);
                     if (response.success) {
                         $('#followButton' + user_id).val(response.updated_button);
+                        // Redirecionar para a página do usuário
+                        window.location.href = response.user_url;
                     }
                 },
                 error: function(error) {

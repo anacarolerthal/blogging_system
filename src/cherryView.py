@@ -453,12 +453,15 @@ class BlogView(object):
             #return self.users_page(int(user_id))
             updated_button = "Deixar de Seguir"
             success = True
+            user_url = f'/users_page/{user_id}'
         except AlreadyFollowing as e:
             # unfollow
             #self.user.unfollow(int(user_id))
             #return self.users_page(int(user_id))
             self.user.unfollow(int(user_id))
             updated_button = "Seguir"
+            success = True
+            user_url = f'/users_page/{user_id}'
         except FollowInvalidUser as e:
             # invalid user
             return self.users_page(int(user_id))
@@ -466,7 +469,7 @@ class BlogView(object):
             # cannot follow self 
             # add message to page
             return self.users_page(int(user_id)) + '<p style="text-align: center;">Não é possível seguir a si mesmo.</p>'
-        return json.dumps({'success': success, 'updated_button': updated_button})
+        return json.dumps({'success': success, 'updated_button': updated_button, 'user_url': user_url})
 
 
     @cherrypy.expose
