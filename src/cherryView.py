@@ -16,6 +16,7 @@ static_dir = os.path.abspath(static_dir)
 cherrypy.config.update({
     'tools.staticdir.on': True,
     'tools.staticdir.dir': static_dir,
+    'tools.staticdir.root': os.path.abspath(os.path.join(current_dir, '..'))
     })
 
 # read base_html file
@@ -25,10 +26,11 @@ with open(os.path.join(static_dir, 'base_html.html'), 'r') as f:
 
 def post_to_html(posts, user=None, n_followers=None, n_following=None):
     if user is not None and n_followers is not None and n_following is not None:
+        user_id = user.get_id()
         content = f'''
         <div class="user-info">
-            <h2>Bem-vindo ao Bloggster!</h2>
-            <h3>Seguidores: {n_followers} | Seguindo: {n_following} |  <a href="/followers_page">Ver</a></h3>
+            <h2>@username</h2>
+            <h3>Seguidores: {n_followers} | Seguindo: {n_following} |  <a href="/followers_page/{user_id}">Ver</a></h3>
             <form method="post" action="/do_follow">
                 <input type="hidden" name="user_id" value={user.get_id()}>
                 <input type="submit" value="Seguir">
@@ -115,6 +117,9 @@ def comments_to_html(comments):
     </body>
     </html>
     '''
+    content += '''<div class="back-button">
+            <h2><a href="http://localhost:8080/main_page">← Voltar</a></h2>
+        </div>'''
     return base_html.replace('''</body>
 </html>''', content)
 
@@ -179,7 +184,7 @@ def followers_page_html(user, followers):
     </div>
     <br>
     <div class="back-button">
-        <h2><a href="http://localhost:8080/personal_page">← Voltar</a></h2>
+        <h2><a href="http://localhost:8080/users_page/'''+str(user.get_id())+'''">← Voltar</a></h2>
     </div>
     </body>
     </html>
@@ -241,12 +246,18 @@ class BlogView(object):
         return personal_page_html(self.user, tagged_user_posts)
     
     @cherrypy.expose
-    def followers_page(self):
-        if self.user_id is None:
-            return login()
-        followers = self.user.get_followers()
-        return followers_page_html(self.user, followers)
-    
+    def followers_page(self, user_id):
+        #if self.user_id is None:
+        #    return login()
+        username = self.model.get_username_by_user_id(int(user_id))
+        # create user object
+        user = User(
+            username=username
+        )
+        user.set_id(int(user_id))
+        # get user followers
+        followers = user.get_followers()
+        return followers_page_html(user, followers)
 
     @cherrypy.expose
     def users_page(self, author_id):
@@ -319,7 +330,7 @@ class BlogView(object):
         else:
             # Authentication failed, display an error message on the login page
             error_message = "Invalid username or password. Please try again."
-            login_form = login() + f'<p style="color: red;">{error_message}</p>'
+            login_form = login() + f'<p style="color: red; text-align:center;">{error_message}</p>'
             return login_form
 
     @cherrypy.expose
@@ -365,12 +376,12 @@ class BlogView(object):
         matches = re.findall(pattern, postId)
         id = int(matches[0])
         comments = self.model.get_comments_for_post(id)
-        if comments is not None:
+        if len(comments) > 0:
             comments = [utils.transformReplyDataToObject(reply) for reply in comments]
             comments.reverse()
             return comments_to_html(comments)
         else:
-            return "Nao ha comentarios"
+            return comments_to_html([]) + f'<p style="text-align: center;">Ainda não há comentários. Seja o primeiro a comentar!</p>'
 
     @cherrypy.expose
     def do_like(self, post_id):
