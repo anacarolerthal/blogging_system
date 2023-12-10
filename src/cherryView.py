@@ -28,6 +28,10 @@ with open(os.path.join(static_dir, 'index_html.html'), 'r') as f:
 with open(os.path.join(static_dir, 'base_html.html'), 'r') as f:
     base_html = f.read()
 
+# read base_moderator file
+with open(os.path.join(static_dir, 'base_moderator.html'), 'r') as f:
+    base_moderator = f.read()
+
 
 def post_to_html(posts, user=None, n_followers=None, n_following=None, logged_user=None):
     if user is not None and n_followers is not None and n_following is not None:
@@ -98,8 +102,20 @@ def post_to_html(posts, user=None, n_followers=None, n_following=None, logged_us
     '''
     return base_html.replace('''</body>''', content)
 
-def moderator_post_to_html(posts):
-    content = """
+def moderator_post_to_html(posts, user=None):
+    content = ''
+    if user is not None:
+        user_id = user.get_id()
+        user_name = user.get_username()
+        content = f'''
+            <div class="user-info">
+                <h2>@{user_name}</h2>
+            <div class="back-button" style="margin-left: 145px;">
+            <h3><a href="http://localhost:8080/main_page">← Voltar</a></h3>
+            </div>
+            '''
+    
+    content+= """
     <h1 style="text-align: center;">Bem-vindo ao Bloggster, moderador!</h1>
     """
     for post in posts:
@@ -125,7 +141,7 @@ def moderator_post_to_html(posts):
     </div>
 </body>
 '''
-    return base_html.replace('''</body>''', content)
+    return base_moderator.replace('''</body>''', content)
 
 def new_post_to_html():
     # Renderiza a página para criar uma nova postagem
@@ -146,7 +162,7 @@ def new_post_to_html():
     """
     return base_html.replace('''</body>''', content)
 
-def comments_to_html(comments):
+def comments_to_html(comments, is_moderator= False):
     content = ''
     for comment in comments:
         content += f'''
@@ -164,9 +180,11 @@ def comments_to_html(comments):
     content += '''<div class="back-button">
             <h2><a href="http://localhost:8080/main_page">← Voltar</a></h2>
         </div>'''
+    if is_moderator:
+        return base_moderator.replace('''</body>''', content)
     return base_html.replace('''</body>''', content)
 
-def tag_search_html():
+def tag_search_html(is_moderator=False):
     content = '''
     <!-- <h1 style="text-align: center;">Search by tag</h1> -->
     <h1 style="text-align: center;">Filtrar por tag</h1>
@@ -177,9 +195,11 @@ def tag_search_html():
     </form>
     </body>
     '''
+    if is_moderator:
+        return base_moderator.replace('''</body>''', content)
     return base_html.replace('''</body>''', content)
 
-def tag_search_result_html(posts):
+def tag_search_result_html(posts, is_moderator=False):
     content = '''
     <!-- <h1 style="text-align: center;">Search by tag</h1> -->
     <h1 style="text-align: center;">Filtrar por tag</h1>
@@ -221,6 +241,8 @@ def tag_search_result_html(posts):
     </div>
 </body>
 '''
+    if is_moderator:
+        return base_moderator.replace('''</body>''', content)
     return base_html.replace('''</body>''', content)
 
 def login():
@@ -251,10 +273,11 @@ def register():
     '''
     return index_html.replace('''</body>''', content)
 
-def personal_page_html(user, posts, logged_user=None):
+def personal_page_html(user, posts, logged_user=None, is_moderator=False):
+    if is_moderator:
+        return moderator_post_to_html(posts, user = user)
     followers = user.get_followers()
     following = user.get_following()
-
     return post_to_html(posts, user=user, n_followers=len(followers), n_following=len(following), logged_user=logged_user)
 
 def followers_page_html(user, followers):
@@ -342,12 +365,12 @@ class BlogView(object):
         
         # if user has no posts, display a message
         if len(tagged_user_posts) == 0:
-            return personal_page_html(self.user, tagged_user_posts) + '<p style="text-align: center;">Você ainda não tem nenhuma postagem. Clique em <a href="http://localhost:8080/new_post">"Nova Postagem"</a> para começar a blogar!</p>'
-        return personal_page_html(self.user, tagged_user_posts)
+            return personal_page_html(self.user, tagged_user_posts, self.user, self.is_moderator) + '<p style="text-align: center;">Você ainda não tem nenhuma postagem. Clique em <a href="http://localhost:8080/new_post">"Nova Postagem"</a> para começar a blogar!</p>'
+        return personal_page_html(self.user, tagged_user_posts, self.user, self.is_moderator)
 
     @cherrypy.expose
     def tags_filter(self):
-        return tag_search_html()
+        return tag_search_html(self.is_moderator)
     
     @cherrypy.expose
     def tag_search_result(self, tag):
@@ -374,8 +397,8 @@ class BlogView(object):
             post.tags = tags
             tagged_posts.append(post)
         tagged_posts.reverse()
-        return tag_search_result_html(tagged_posts)
-    
+        return tag_search_result_html(tagged_posts, self.is_moderator)
+
     @cherrypy.expose
     def followers_page(self, user_id):
         #if self.user_id is None:
@@ -394,9 +417,10 @@ class BlogView(object):
     def users_page(self, author_id):
         username = self.model.get_username_by_user_id(int(author_id))
         # create user object
-        some_other_user = User(
-            username=username
-        )
+        # some_other_user = User(
+        #     username=username
+        # )
+        some_other_user = UserFactory().create_user("USER", username, author_id)
         some_other_user.set_id(int(author_id))
         # get user posts
         user_posts = [utils.transformPostDataToObject(post) for post in self.model.get_posts_for_user(author_id)]
@@ -413,7 +437,7 @@ class BlogView(object):
             post.tags = tags
             tagged_user_posts.append(post)
         tagged_user_posts.reverse()
-        return personal_page_html(some_other_user, tagged_user_posts, self.user)
+        return personal_page_html(some_other_user, tagged_user_posts, self.user, self.is_moderator)
 
     @cherrypy.expose
     def new_post(self):
@@ -483,7 +507,7 @@ class BlogView(object):
         query_string = "postId="+post_id
         id = reply.publish()
         return self.get_post_comments(query_string)
-    
+
     @cherrypy.expose
     def do_follow(self, user_id):
         try:
@@ -520,9 +544,9 @@ class BlogView(object):
         if len(comments) > 0:
             comments = [utils.transformReplyDataToObject(reply) for reply in comments]
             comments.reverse()
-            return comments_to_html(comments)
+            return comments_to_html(comments, self.is_moderator)
         else:
-            return comments_to_html([]) + f'<p style="text-align: center;">Ainda não há comentários. Seja o primeiro a comentar!</p>'
+            return comments_to_html([], self.is_moderator) + f'<p style="text-align: center;">Ainda não há comentários.</p>'
 
     @cherrypy.expose
     def do_like(self, post_id):

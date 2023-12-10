@@ -18,28 +18,29 @@ class BaseUser(ABC):
     email: str -> email of the user
     user_id: int -> id of the user
     """
+    def __init__(self, username: str, password: str = None, email: str = None, id: int = None):
+        self.id = id
+        self.username = username
+        self.password = password
+        self.email = email
 
-    id: int
-    username: str
-    password: str
-    email: str
 
     def set_id(self, user_id) -> None:
         if type(user_id) != int:
             raise TypeError("Tipo inválido de id. Ids devem ser inteiros.")
-        self.__id = user_id
+        self.id = user_id
 
     def get_id(self) -> int:
         """Get the id of the user"""
-        return self.__id
+        return self.id
 
     def get_username(self) -> str:
         """Get the username of the user"""
-        return self.__username
+        return self.username
 
     def get_email(self) -> str:
         """Get the email of the user"""
-        return self.__email
+        return self.email
 
     # @abstractmethod
     # def register(self, username: str, password: str, email: str) -> None:
@@ -62,10 +63,10 @@ class User(BaseUser):
                  posts: List[int] = None, 
                  followers: List[int] = None,
                  following: List[int] = None):
-        self.__id = id
-        self.__username = username
-        self.__password = password
-        self.__email = email
+        self.id = id
+        self.username = username
+        self.password = password
+        self.email = email
         self.__posts = posts if posts is not None else []
         self.__followers = followers if followers is not None else []
         self.__following = following if following is not None else []
@@ -187,7 +188,7 @@ class Moderator(BaseUser):
 class UserFactory:
     """Factory class for users"""
     @staticmethod
-    def create_user(type_: str, username: str, id:int) -> BaseUser:
+    def create_user(type_: str, username: str, id:int):
         """Create a user"""
         if type_ == 'USER':
             return User(username,
