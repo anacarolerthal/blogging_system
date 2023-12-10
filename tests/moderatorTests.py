@@ -90,7 +90,7 @@ class TestModeratorSystem(unittest.TestCase):
             self.moderator.ban_user(2)
 
         # assert
-        self.assertEqual("Usuário não existe." , str(context.exception))
+        self.assertEqual("O usuário não existe." , str(context.exception))
 
     def test_moderator_ban_user_already_banned(self):
         # arrange
@@ -122,7 +122,7 @@ class TestModeratorSystem(unittest.TestCase):
             self.moderator.unban_user(2)
 
         # assert
-        self.assertEqual("Usuário não existe." , str(context.exception))
+        self.assertEqual("O usuário não existe." , str(context.exception))
 
     def test_moderator_unban_user_already_unbanned(self):
         # arrange
@@ -137,10 +137,6 @@ class TestModeratorSystem(unittest.TestCase):
 
         # assert
         self.assertEqual("Usuário já desbanido." , str(context.exception))
-
-
-
-
 
 
 if __name__ == '__main__':
