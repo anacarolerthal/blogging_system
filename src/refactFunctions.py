@@ -70,3 +70,15 @@ def createPostWithSplitTags(user_id: int, title: str, content: str, post_tags: l
         tags=post_tags
     )
     return post
+
+def createReplyWithPostID(user_id: int, post_id: int, content: str) -> Reply:
+    """
+    Creates a comment with the post_id.
+    """
+    reply = Reply(
+        author_id=user_id,
+        content=content,
+        parent_post_id=post_id
+    )
+    query_string = "post_id={}".format(post_id)
+    return reply, query_string

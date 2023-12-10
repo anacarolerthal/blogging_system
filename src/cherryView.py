@@ -460,30 +460,34 @@ class BlogView(object):
         post.publish()
         return self.main_page()
 
+# ---------------------------------------------------
+
     # OLD VERSION OF is_authenticated
-    # @cherrypy.expose
-    # def is_authenticated(self, username=None, password=None):
-    #     '''
-    #     Function that authenticates a user
-    #     '''
-    #     admin = Admin()
-    #     if admin.authenticate(username, password):
-    #         # Authentication successful, render the main page
-    #         self.user = User(
-    #             username=username,
-    #             password=password
-    #         )
-    #         user_id = self.model.get_user_id_by_username(username)
-    #         self.user.set_id(user_id)
-    #         self.user_id = self.user.get_id()
-    #         return self.main_page()
-    #     else:
-    #         # Authentication failed, display an error message on the login page
-    #         error_message = "Invalid username or password. Please try again."
-    #         login_form = login() + f'<p style="color: red; text-align:center;">{error_message}</p>'
-    #         return login_form
+    @cherrypy.expose
+    def is_authenticated(self, username=None, password=None):
+        '''
+        Function that authenticates a user
+        '''
+        admin = Admin()
+        if admin.authenticate(username, password):
+            # Authentication successful, render the main page
+            self.user = User(
+                username=username,
+                password=password
+            )
+            user_id = self.model.get_user_id_by_username(username)
+            self.user.set_id(user_id)
+            self.user_id = self.user.get_id()
+            return self.main_page()
+        else:
+            # Authentication failed, display an error message on the login page
+            error_message = "Invalid username or password. Please try again."
+            login_form = login() + f'<p style="color: red; text-align:center;">{error_message}</p>'
+            return login_form
     
     # REFACTORED VERSION OF is_authenticated
+
+# ---------------------------------------------------
 
     @cherrypy.expose
     def registering(self):
@@ -492,15 +496,21 @@ class BlogView(object):
         '''
         return register()
 
+    # @cherrypy.expose
+    # def do_comment(self, content, post_id):
+    #     reply = Reply(
+    #         author_id=self.user_id,
+    #         content=content,
+    #         parent_post_id=post_id
+    #     )
+    #     query_string = "postId="+post_id
+    #     id = reply.publish()
+    #     return self.get_post_comments(query_string)
+    
     @cherrypy.expose
     def do_comment(self, content, post_id):
-        reply = Reply(
-            author_id=self.user_id,
-            content=content,
-            parent_post_id=post_id
-        )
-        query_string = "postId="+post_id
-        id = reply.publish()
+        reply, query_string = rf.createReplyWithPostID(self.user_id, post_id, content)
+        reply.publish()
         return self.get_post_comments(query_string)
     
     @cherrypy.expose
