@@ -10,6 +10,13 @@ class Admin:
         password: str -> password of the user
         """
         return user_model.check_user(username, password)
+    
+    def is_moderator(self, username: str):
+        """Check if a user is a moderator
+        
+        username: str -> username of the user
+        """
+        return user_model.check_if_moderator(username)
 
     def register(self, username: str, password: str, email: str, is_moderator: bool = False):
         """Register a user
