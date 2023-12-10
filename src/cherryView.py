@@ -295,29 +295,44 @@ class BlogView(object):
         followers = user.get_followers()
         return followers_page_html(user, followers)
 
+    # OLD VERSION of users_page
+    # @cherrypy.expose
+    # def users_page(self, author_id):
+    #     username = self.model.get_username_by_user_id(int(author_id))
+    #     # create user object
+    #     some_other_user = User(
+    #         username=username
+    #     )
+    #     some_other_user.set_id(int(author_id))
+    #     # get user posts
+    #     user_posts = [utils.transformPostDataToObject(post) for post in self.model.get_posts_for_user(author_id)]
+    #     tagged_user_posts =[]
+    #     # get post tags
+    #     for post in user_posts:
+    #         tag_ids = self.model.get_tags_for_post(post.id)
+    #         # get tag names from tag ids
+    #         tags = []
+    #         for tag_id in tag_ids:
+    #             tags.append(self.model.get_tag_name_by_id(tag_id))
+    #         # add tags to post
+    #         post.tags = tags
+    #         tagged_user_posts.append(post)
+    #     tagged_user_posts.reverse()
+    #     return personal_page_html(some_other_user, tagged_user_posts)
+    
+    # REFACTORED VERSION of users_page
     @cherrypy.expose
     def users_page(self, author_id):
-        username = self.model.get_username_by_user_id(int(author_id))
-        # create user object
-        some_other_user = User(
-            username=username
-        )
-        some_other_user.set_id(int(author_id))
-        # get user posts
-        user_posts = [utils.transformPostDataToObject(post) for post in self.model.get_posts_for_user(author_id)]
-        tagged_user_posts =[]
-        # get post tags
-        for post in user_posts:
-            tag_ids = self.model.get_tags_for_post(post.id)
-            # get tag names from tag ids
-            tags = []
-            for tag_id in tag_ids:
-                tags.append(self.model.get_tag_name_by_id(tag_id))
-            # add tags to post
-            post.tags = tags
-            tagged_user_posts.append(post)
-        tagged_user_posts.reverse()
+        try:
+            some_other_user = utils.transformUserDataToObject(self.model.get_user_by_id(int(author_id)))
+        except UserIsNone as e:
+            # invalid user
+            return login()
+        
+        tagged_user_posts = utils.returnTaggedUserPosts(self.model, int(author_id))
+        
         return personal_page_html(some_other_user, tagged_user_posts)
+    
 
     @cherrypy.expose
     def new_post(self):
