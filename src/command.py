@@ -240,7 +240,7 @@ class CheckPostAlreadyLiked(DBCommand):
         self.user_id = user_id
         self.post_id = post_id
 
-    def execute(self, user_id, post_id):
+    def execute(self):
         self.cursor.execute('SELECT * FROM postlikes WHERE user_id = %s AND post_id = %s', (self.user_id, self.post_id))
         return bool(self.cursor.fetchone())
 
