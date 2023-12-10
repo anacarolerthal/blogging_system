@@ -495,6 +495,7 @@ class BlogView(object):
                 self.user = UserFactory().create_user("MODERATOR", username, user_id)
             elif not admin.is_moderator(username):
                 self.user = UserFactory().create_user("USER", username, user_id)
+            self.user.login()
             self.user.set_id(user_id)
             self.user_id = self.user.get_id()
             return self.main_page()
