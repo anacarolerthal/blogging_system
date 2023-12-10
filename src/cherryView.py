@@ -7,6 +7,7 @@ from model import BlogModel
 import utils
 import re
 import os
+import json
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 static_dir = os.path.join(current_dir, 'html')
@@ -26,9 +27,10 @@ with open(os.path.join(static_dir, 'base_html.html'), 'r') as f:
 def post_to_html(posts, user=None, n_followers=None, n_following=None):
     if user is not None and n_followers is not None and n_following is not None:
         user_id = user.get_id()
+        user_name = user.get_username()
         content = f'''
         <div class="user-info">
-            <h2>@username</h2>
+            <h2>@{user_name}</h2>
             <h3>Seguidores: {n_followers} | Seguindo: {n_following} |  <a href="/followers_page/{user_id}">Ver</a></h3>
             <p>Deseja escrever uma <a href="http://localhost:8080/new_post">Nova Postagem</a>?</p>
         </div>
@@ -58,9 +60,11 @@ def post_to_html(posts, user=None, n_followers=None, n_following=None):
                 <textarea type="text" id="content" name="content" placeholder="Comente sobre" rows="4" required></textarea>
                 <input type="submit" value="Comentar">
             </form>
-            <form method="post" action="do_like">
+        </div>
+        <div class="blog-post-likes">
+            <form method="post" action="do_like" class="like-form" id="like-form" data-post-id="{post.id}">
                 <input type="hidden" name="post_id" value={post.id}>
-                <input type="submit" value="Like">
+                <input type="submit" class="like-button" id="likeButton{post.id}" value="Like">
             </form>
         </div>
         <div class="blog-post-comments">
@@ -68,10 +72,8 @@ def post_to_html(posts, user=None, n_followers=None, n_following=None):
         </div>
     </div>
 </body>
-</html>
 '''
-    return base_html.replace('''</body>
-</html>''', content)
+    return base_html.replace('''</body>''', content)
 
 def new_post_to_html():
     # Renderiza a página para criar uma nova postagem
@@ -88,9 +90,9 @@ def new_post_to_html():
 
         <input type="submit" value="Postar">
     </form>
+    </body>
     """
-    return base_html.replace('''</body>
-</html>''', content)
+    return base_html.replace('''</body>''', content)
 
 def comments_to_html(comments):
     content = ''
@@ -106,13 +108,11 @@ def comments_to_html(comments):
             </div>
         </div>
     </body>
-    </html>
     '''
     content += '''<div class="back-button">
             <h2><a href="http://localhost:8080/main_page">← Voltar</a></h2>
         </div>'''
-    return base_html.replace('''</body>
-</html>''', content)
+    return base_html.replace('''</body>''', content)
 
 def login():
     content = '''
@@ -124,10 +124,8 @@ def login():
     </form>
     <p style="text-align: center;">Se você ainda não tem uma conta, <a href="registering">registre-se</a>.</p>
     </body>
-</html>
     '''
-    return base_html.replace('''</body>
-</html>''', content)
+    return base_html.replace('''</body>''', content)
 
 def register():
     content = '''
@@ -140,10 +138,8 @@ def register():
     </form>
     <p style="text-align: center;">Já possui uma conta? Faça <a href="http://localhost:8080/">login</a>.</p>
     </body>
-</html>
     '''
-    return base_html.replace('''</body>
-</html>''', content)
+    return base_html.replace('''</body>''', content)
 
 def personal_page_html(user, posts):
     followers = user.get_followers()
@@ -178,10 +174,8 @@ def followers_page_html(user, followers):
         <h2><a href="http://localhost:8080/users_page/'''+str(user.get_id())+'''">← Voltar</a></h2>
     </div>
     </body>
-    </html>
         '''
-    return base_html.replace('''</body>
-</html>''', content)
+    return base_html.replace('''</body>''', content)
 
 
 class BlogView(object):
@@ -294,7 +288,7 @@ class BlogView(object):
             tg.publish()
             post_tags.append(tag)
 
-        print(post_tags)
+        #print(post_tags)
         
         post = Post(
             author_id=self.user_id,
@@ -365,12 +359,19 @@ class BlogView(object):
     def do_like(self, post_id):
         try:
             self.user.like(post_id)
-            return self.main_page().replace('''<input type="submit" value="Like">''',
-                                            '''<input type="submit" value="Unlike">''')
+            #return self.main_page().replace('''<input type="submit" value="Like">''','''<input type="submit" value="Unlike">''')
+            #updated_button = f'id="likeButton_{post_id}" value="Unlike"'
+            updated_button = "Unlike"
+            success = True
         except Exception as e:
             # dislike
             self.user.unlike(post_id)
-            return self.main_page()
+            #updated_button = f'id="likeButton_{post_id}" value="Like"'
+            #return self.main_page()
+            #return self.main_page().replace(f'id="likeButton_{post_id}" value="Like"', updated_button)
+            updated_button = "Like"
+            success = True
+        return json.dumps({'success': success, 'updated_button': updated_button})
 
     @cherrypy.expose
     def is_registered(self, username=None, password=None, email=None):

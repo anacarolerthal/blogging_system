@@ -98,6 +98,12 @@ form.new-comment-form textarea {
     border-radius: 4px;
 }
 
+form.like-form {
+    max-width: 100px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
 label {
     margin-bottom: 5px;
     margin-top: 10px;
@@ -193,6 +199,7 @@ a:hover {
 .blog-post-content {
     margin-top: 10px;
     color: #666;
+    /*  */
 }
 
 .blog-post-meta {
