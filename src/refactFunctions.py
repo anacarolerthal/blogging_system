@@ -54,19 +54,19 @@ def splitTags(tags: str) -> list:
     """
     post_tags = []
     for tag in tags.split():
-        tg = Tag(tag_name = tag)
+        tg = Tag(tag_name=tag)
         tg.publish()
-        post_tags.append(tg)
+        post_tags.append(tag)
     return post_tags
 
-def createPostWithSplitTags(user_id: int, title: str, content: str, tags: list) -> Post:
+def createPostWithSplitTags(user_id: int, title: str, content: str, post_tags: list) -> Post:
     """
     Creates a post with tags from a string of tags.
     """
     post = Post(
-        title=title, 
+        author_id=user_id,
+        title=title,
         content=content,
-        tags=tags,
-        author_id=user_id
-        )
+        tags=post_tags
+    )
     return post

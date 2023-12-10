@@ -2,9 +2,9 @@ import cherrypy
 from admin import Admin
 from content import Post, Reply
 from users import User
-from tags import Tag
 from model import BlogModel
 from customExceptions import *
+from tags import Tag
 import refactFunctions as rf
 import utils
 import re
@@ -460,27 +460,30 @@ class BlogView(object):
         post.publish()
         return self.main_page()
 
-    @cherrypy.expose
-    def is_authenticated(self, username=None, password=None):
-        '''
-        Function that authenticates a user
-        '''
-        admin = Admin()
-        if admin.authenticate(username, password):
-            # Authentication successful, render the main page
-            self.user = User(
-                username=username,
-                password=password
-            )
-            user_id = self.model.get_user_id_by_username(username)
-            self.user.set_id(user_id)
-            self.user_id = self.user.get_id()
-            return self.main_page()
-        else:
-            # Authentication failed, display an error message on the login page
-            error_message = "Invalid username or password. Please try again."
-            login_form = login() + f'<p style="color: red; text-align:center;">{error_message}</p>'
-            return login_form
+    # OLD VERSION OF is_authenticated
+    # @cherrypy.expose
+    # def is_authenticated(self, username=None, password=None):
+    #     '''
+    #     Function that authenticates a user
+    #     '''
+    #     admin = Admin()
+    #     if admin.authenticate(username, password):
+    #         # Authentication successful, render the main page
+    #         self.user = User(
+    #             username=username,
+    #             password=password
+    #         )
+    #         user_id = self.model.get_user_id_by_username(username)
+    #         self.user.set_id(user_id)
+    #         self.user_id = self.user.get_id()
+    #         return self.main_page()
+    #     else:
+    #         # Authentication failed, display an error message on the login page
+    #         error_message = "Invalid username or password. Please try again."
+    #         login_form = login() + f'<p style="color: red; text-align:center;">{error_message}</p>'
+    #         return login_form
+    
+    # REFACTORED VERSION OF is_authenticated
 
     @cherrypy.expose
     def registering(self):

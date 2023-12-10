@@ -181,7 +181,7 @@ class BlogModel:
         command = CreateReplyCommand(self.connection, reply)
         return self.execute_command(command)
     
-    def create_user(self, username, password, email):
+    def add_user(self, username, password, email):
         command = CreateUserCommand(self.connection, username, password, email)
         return self.execute_command(command)
     
@@ -245,15 +245,15 @@ class BlogModel:
         command = CheckUserCommand(self.connection, username, password)
         return self.execute_command(command)
 
-    def check_user_in_db(self, user_id):
+    def check_if_user_in_db(self, user_id):
         command = CheckUserInDBCommand(self.connection, user_id)
         return self.execute_command(command)
 
-    def check_post_in_db(self, post_id):
+    def check_if_post_in_db(self, post_id):
         command = CheckPostInDbCommand(self.connection, post_id)
         return self.execute_command(command)
 
-    def check_post_already_liked(self, user_id, post_id):
+    def check_if_post_already_liked(self, user_id, post_id):
         command = CheckPostAlreadyLiked(self.connection, user_id, post_id)
         return self.execute_command(command)
 
