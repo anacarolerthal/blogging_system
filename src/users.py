@@ -146,8 +146,6 @@ class User(BaseUser):
 
         if followee_id == self.get_id():
             raise CannotUnfollowSelf()
-        
-        print(self.get_following)
 
         if followee_id not in self.get_following():
             raise AlreadyNotFollowing()
@@ -180,17 +178,36 @@ class Moderator(BaseUser):
         """Get the email of the user"""
         return self.__email
 
-    def delete_post(self, post_id: int) -> None:
-        """Delete a post"""
+    def set_id(self, user_id) -> None:
+        if type(user_id) != int:
+            raise TypeError("Tipo inválido de id. Ids devem ser inteiros.")
+        self.__id = user_id
         pass
 
-    def ban_user(self, user_id: int) -> None:
+    def delete_post(self, post_id: int) -> None:
+        """Delete a post"""
+        if not BlogModel().check_if_post_in_db(post_id):
+            raise InvalidPostException()
+        else:
+            BlogModel().delete_post(post_id)
+
+    def ban_user(self, banned_user_id: int) -> None:
         """Ban a user"""
-        pass
-      
-    def unban_user(self, user_id: int) -> None:
+        if not BlogModel().check_if_user_in_db(banned_user_id):
+            raise InvalidUserException()
+        elif BlogModel().check_if_user_is_banned(banned_user_id):
+            raise AlreadyBanned()
+        else:
+            BlogModel().ban_user(self.__id, banned_user_id)
+
+    def unban_user(self, unbanned_user_id: int) -> None:
         """Unban a user"""
-        pass
+        if not BlogModel().check_if_user_in_db(unbanned_user_id):
+            raise InvalidUserException()
+        elif not BlogModel().check_if_user_is_banned(unbanned_user_id):
+            raise AlreadyUnbanned()
+        else:
+            BlogModel().unban_user(self.__id, unbanned_user_id)
 
 class UserFactory:
     """Factory class for users"""
