@@ -181,8 +181,8 @@ class BlogModel:
         command = CreateReplyCommand(self.connection, reply)
         return self.execute_command(command)
     
-    def add_user(self, username, password, email):
-        command = CreateUserCommand(self.connection, username, password, email)
+    def add_user(self, username, password, email, is_moderator):
+        command = CreateUserCommand(self.connection, username, password, email, is_moderator)
         return self.execute_command(command)
     
     def follow(self, follower, followee):
@@ -299,4 +299,8 @@ class BlogModel:
     
     def delete_post(self, post_id):
         command = DeletePostCommand(self.connection, post_id)
+        return self.execute_command(command)
+
+    def check_if_moderator(self, username):
+        command = CheckIfModeratorCommand(self.connection, username)
         return self.execute_command(command)

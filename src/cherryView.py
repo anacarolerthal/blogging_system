@@ -1,7 +1,7 @@
 import cherrypy
 from admin import Admin
 from content import Post, Reply
-from users import User
+from users import User, Moderator, UserFactory
 from tags import Tag
 from model import BlogModel
 from customExceptions import *
@@ -203,6 +203,7 @@ def register():
         <input type="text" name="username" placeholder="Username">
         <input type="password" name="password" placeholder="Password">
         <input type="email" name="email" placeholder="Email">
+        <input type="checkbox" name="is_moderator" value=True> Moderador?
         <input type="submit" value="Register">
     </form>
     <p style="text-align: center;">Já possui uma conta? Faça <a href="http://localhost:8080/">login</a>.</p>
@@ -407,6 +408,8 @@ class BlogView(object):
         admin = Admin()
         if admin.authenticate(username, password):
             # Authentication successful, render the main page
+            if admin.is_moderator(username):
+                UserFactory = utils.ModeratorFactory()
             self.user = User(
                 username=username,
                 password=password
@@ -414,6 +417,8 @@ class BlogView(object):
             user_id = self.model.get_user_id_by_username(username)
             self.user.set_id(user_id)
             self.user_id = self.user.get_id()
+            if self.user.is_moderator:
+                return self.main_page() + '<p style="text-align: center;">Você é um moderador. <a href="http://localhost:8080/users_page/'+str(self.user_id)+'">Veja suas postagens</a>.</p>'
             return self.main_page()
         else:
             # Authentication failed, display an error message on the login page
@@ -495,13 +500,18 @@ class BlogView(object):
         return json.dumps({'success': success, 'updated_button': updated_button})
 
     @cherrypy.expose
-    def is_registered(self, username=None, password=None, email=None):
+    def is_registered(self, username=None, password=None, email=None, is_moderator=None):
         '''
         Function that registers a user
         '''
         admin = Admin()
         if not admin.authenticate(username, password):
-            admin.register(username, password, email)
+            if is_moderator == "True":
+                is_moderator = True
+            else:
+                is_moderator = False
+            
+            admin.register(username, password, email, is_moderator)
             # redirect to login page
             return login() + '<p style="color: green;">Registrado com sucesso! Faça login.</p>'
         else:

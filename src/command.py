@@ -46,14 +46,15 @@ class CreateReplyCommand(DBCommand):
         return id
     
 class CreateUserCommand(DBCommand):
-    def __init__(self, db_connection, username, password, email):
+    def __init__(self, db_connection, username, password, email, is_moderator):
         super().__init__(db_connection)
         self.username = username
         self.password = password
         self.email = email
+        self.is_moderator = is_moderator
     
     def execute(self):
-        self.cursor.execute('INSERT INTO baseuser (username, passw, email, is_moderator) VALUES (%s, %s, %s, %s) RETURNING id', (self.username, self.password, self.email, False))
+        self.cursor.execute('INSERT INTO baseuser (username, passw, email, is_moderator) VALUES (%s, %s, %s, %s) RETURNING id', (self.username, self.password, self.email, self.is_moderator))
         user_id = self.cursor.fetchone()[0]
         self.connection.commit()
         return user_id
@@ -349,3 +350,11 @@ class DeletePostCommand(DBCommand):
         self.cursor.execute('DELETE FROM post WHERE id = %s', (self.post_id,))
         self.connection.commit()
 
+class CheckIfModeratorCommand(DBCommand):
+    def __init__(self, db_connection, username):
+        super().__init__(db_connection)
+        self.username = username
+
+    def execute(self):
+        self.cursor.execute('SELECT is_moderator FROM baseuser WHERE username = %s', (self.username,))
+        return bool(self.cursor.fetchone()[0])
