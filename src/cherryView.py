@@ -93,6 +93,35 @@ def post_to_html(posts, user=None, n_followers=None, n_following=None, logged_us
 '''
     return base_html.replace('''</body>''', content)
 
+def moderator_post_to_html(posts):
+    content = """
+    <h1 style="text-align: center;">Bem-vindo ao Bloggster, moderador!</h1>
+    """
+    for post in posts:
+        # get author username
+        author_id = post.author_id
+        author_username = BlogModel().get_username_by_user_id(author_id)
+
+        content += f'''
+    <div class="blog-post">
+        <div class="blog-post-title">{post.title}</div>
+        <div class="blog-post-content">
+            <p>{post.content}</p>
+            <p>More content goes here...</p>
+        </div>
+        <div class="blog-post-meta">
+            <span>Author: <a href="users_page/{post.author_id}">{author_username}</a></span> |
+            <span>Date: {post.date}</span>
+            <span>Tags: {post.tags}</span>
+        </div>
+        <div class="blog-post-comments">
+            Veja os <a href="get_post_comments/postId={post.id}">comentários</a>
+        </div>
+    </div>
+</body>
+'''
+    return base_html.replace('''</body>''', content)
+
 def new_post_to_html():
     # Renderiza a página para criar uma nova postagem
     content = """
@@ -275,8 +304,11 @@ class BlogView(object):
             tagged_posts.append(post)
         tagged_posts.reverse()
         self.posts = tagged_posts
-        return post_to_html(self.posts)
-
+        if self.is_moderator:
+            return moderator_post_to_html(self.posts)
+        elif not self.is_moderator:
+            return post_to_html(self.posts)
+    
     @cherrypy.expose
     def personal_page(self):
         if self.user_id is None:
@@ -408,17 +440,14 @@ class BlogView(object):
         admin = Admin()
         if admin.authenticate(username, password):
             # Authentication successful, render the main page
-            if admin.is_moderator(username):
-                UserFactory = utils.ModeratorFactory()
-            self.user = User(
-                username=username,
-                password=password
-            )
+            self.is_moderator = admin.is_moderator(username)
             user_id = self.model.get_user_id_by_username(username)
+            if self.is_moderator:
+                self.user = UserFactory().create_user("MODERATOR", username, user_id)
+            elif not admin.is_moderator(username):
+                self.user = UserFactory().create_user("USER", username, user_id)
             self.user.set_id(user_id)
             self.user_id = self.user.get_id()
-            if self.user.is_moderator:
-                return self.main_page() + '<p style="text-align: center;">Você é um moderador. <a href="http://localhost:8080/users_page/'+str(self.user_id)+'">Veja suas postagens</a>.</p>'
             return self.main_page()
         else:
             # Authentication failed, display an error message on the login page
