@@ -318,8 +318,8 @@ class CheckIfUserIsBannedCommand(DBCommand):
         self.id = id
 
     def execute(self):
-        self.cursor.execute('SELECT bannedy FROM bannedusers WHERE banned_id = %s', (self.id,))
-        return bool(self.cursor.fetchone()[0])
+        self.cursor.execute('SELECT ban_id FROM bannedusers WHERE banned_id = %s', (self.id,))
+        return bool(self.cursor.fetchone())
 
 class BanUserCommand(DBCommand):
     def __init__(self, db_connection, banner_id, banned_id):

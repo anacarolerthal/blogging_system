@@ -107,14 +107,28 @@ def moderator_post_to_html(posts, user=None):
     if user is not None:
         user_id = user.get_id()
         user_name = user.get_username()
+
+        # check if user_id is banned
+        is_banned = BlogModel().check_if_user_is_banned(user_id)
+
+        if is_banned:
+            updated_button = "Desbanir"
+        else:
+            updated_button = "Banir"
         content = f'''
             <div class="user-info">
                 <h2>@{user_name}</h2>
+            </div>
+            <form method="post" action="/do_ban" class="ban-form" id="ban-form" data-user-id="{user_id}">
+                <input type="hidden" name="user_id" value={user_id}>
+                <input type="submit" class="ban-button" id="banButton{user_id}" value="{updated_button}">
+            </form>
+
             <div class="back-button" style="margin-left: 145px;">
             <h3><a href="http://localhost:8080/main_page">← Voltar</a></h3>
             </div>
             '''
-    
+
     content+= """
     <h1 style="text-align: center;">Bem-vindo ao Bloggster, moderador!</h1>
     """
@@ -533,7 +547,25 @@ class BlogView(object):
             # add message to page
             return self.users_page(int(user_id)) + '<p style="text-align: center;">Não é possível seguir a si mesmo.</p>'
         return json.dumps({'success': success, 'updated_button': updated_button, 'user_url': user_url})
-
+    
+    @cherrypy.expose
+    def do_ban(self, user_id):
+        try:
+            # insert ban in database
+            self.user.ban_user(int(user_id))
+            updated_button = "Desbanir"
+            success = True
+            user_url = f'/users_page/{user_id}'
+        except AlreadyBanned as e:
+            # remove ban
+            self.user.unban_user(int(user_id))
+            updated_button = "Banir"
+            success = True
+            user_url = f'/users_page/{user_id}'
+        except InvalidUserException as e:
+            # invalid user
+            return self.users_page(int(user_id)) + '<p style="text-align: center;">Usuário inválido.</p>'
+        return json.dumps({'success': success, 'updated_button': updated_button, 'user_url': user_url})
 
     @cherrypy.expose
     def get_post_comments(self, postId):

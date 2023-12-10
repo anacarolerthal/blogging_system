@@ -18,4 +18,35 @@
 
 
 
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $(document).on('click', '.ban-button', function(event) {
+            event.preventDefault();
+            var user_id = $(this).closest('form').data('user-id');
+
+            // Envie a requisição AJAX
+            $.ajax({
+                type: 'POST',
+                url: '/do_ban',
+                data: {user_id: user_id},
+                dataType: 'json',
+                success: function(response) {
+                    //console.log(response);
+                    if (response.success) {
+                        $('#banButton' + user_id).val(response.updated_button);
+                        // Redirecionar para a página do usuário
+                        window.location.href = response.user_url;
+                    }
+                },
+                error: function(error) {
+                    console.error(error);
+                }
+            });
+        });
+    });
+</script>
+
+
+
 </html>
