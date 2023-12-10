@@ -25,21 +25,30 @@ with open(os.path.join(static_dir, 'base_html.html'), 'r') as f:
     base_html = f.read()
 
 
-def post_to_html(posts, user=None, n_followers=None, n_following=None):
+def post_to_html(posts, user=None, n_followers=None, n_following=None, logged_user=None):
     if user is not None and n_followers is not None and n_following is not None:
         user_id = user.get_id()
         user_name = user.get_username()
         content = f'''
-        <div class="user-info">
-            <h2>@{user_name}</h2>
-            <h3>Seguidores: {n_followers} | Seguindo: {n_following} |  <a href="/followers_page/{user_id}">Ver</a></h3>
-            <form method="post" action="/do_follow">
-                <input type="hidden" name="user_id" value={user.get_id()}>
-                <input type="submit" value="Seguir">
-            </form>
-            <p>Deseja escrever uma <a href="http://localhost:8080/new_post">Nova Postagem</a>?</p>
-        </div>
-        '''
+            <div class="user-info">
+                <h2>@{user_name}</h2>
+                <h3>Seguidores: {n_followers} | Seguindo: {n_following} |  <a href="/followers_page/{user_id}">Ver</a></h3>
+                <p>Deseja escrever uma <a href="http://localhost:8080/new_post">Nova Postagem</a>?</p>
+            '''
+        if logged_user is not None:
+            if user_id in logged_user.get_following():
+                updated_button = "Deixar de Seguir"
+            else:
+                updated_button = "Seguir"
+            content += f'''
+                <form method="post" action="/do_follow" class="follow-form" id="follow-form" data-user-id="{user_id}">
+                    <input type="hidden" name="user_id" value={user_id}>
+                    <input type="submit" class="follow-button" id="followButton{user_id}" value="{updated_button}">
+                </form>
+            </div>
+            '''
+        else:
+            content += '</div>'
     else:
         content = """
         <h1 style="text-align: center;">Bem-vindo ao Bloggster!</h1>
@@ -150,11 +159,11 @@ def register():
     '''
     return base_html.replace('''</body>''', content)
 
-def personal_page_html(user, posts):
+def personal_page_html(user, posts, logged_user=None):
     followers = user.get_followers()
     following = user.get_following()
 
-    return post_to_html(posts, user=user, n_followers=len(followers), n_following=len(following))
+    return post_to_html(posts, user=user, n_followers=len(followers), n_following=len(following), logged_user=logged_user)
 
 def followers_page_html(user, followers):
     content = f'''
@@ -275,7 +284,7 @@ class BlogView(object):
             post.tags = tags
             tagged_user_posts.append(post)
         tagged_user_posts.reverse()
-        return personal_page_html(some_other_user, tagged_user_posts)
+        return personal_page_html(some_other_user, tagged_user_posts, self.user)
 
     @cherrypy.expose
     def new_post(self):
@@ -350,11 +359,15 @@ class BlogView(object):
         try:
             self.user.follow(int(user_id))
             # return to that user's page
-            return self.users_page(int(user_id))
+            #return self.users_page(int(user_id))
+            updated_button = "Deixar de Seguir"
+            success = True
         except AlreadyFollowing as e:
             # unfollow
+            #self.user.unfollow(int(user_id))
+            #return self.users_page(int(user_id))
             self.user.unfollow(int(user_id))
-            return self.users_page(int(user_id))
+            updated_button = "Seguir"
         except FollowInvalidUser as e:
             # invalid user
             return self.users_page(int(user_id))
@@ -362,6 +375,7 @@ class BlogView(object):
             # cannot follow self 
             # add message to page
             return self.users_page(int(user_id)) + '<p style="text-align: center;">Não é possível seguir a si mesmo.</p>'
+        return json.dumps({'success': success, 'updated_button': updated_button})
 
 
     @cherrypy.expose

@@ -63,6 +63,30 @@
             });
         });
     });
+
+    $(document).ready(function() {
+        $(document).on('click', '.follow-button', function(event) {
+            event.preventDefault();
+            var user_id = $(this).closest('form').data('user-id');
+
+            // Envie a requisição AJAX
+            $.ajax({
+                type: 'POST',
+                url: '/do_follow',
+                data: {user_id: user_id},
+                dataType: 'json',
+                success: function(response) {
+                    console.log(response);
+                    if (response.success) {
+                        $('#followButton' + user_id).val(response.updated_button);
+                    }
+                },
+                error: function(error) {
+                    console.error(error);
+                }
+            });
+        });
+    });
 </script>
 
 </html>

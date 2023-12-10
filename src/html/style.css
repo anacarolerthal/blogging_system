@@ -104,6 +104,12 @@ form.like-form {
     margin-bottom: 0px;
 }
 
+form.follow-form {
+    max-width: 220px;
+    margin-left: 5px;
+    font-weight: bold;
+}
+
 label {
     margin-bottom: 5px;
     margin-top: 10px;

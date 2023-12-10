@@ -1,8 +1,7 @@
-from event import subscribe
-from users import User
+from event import Event
 
-def handle_follow_event(follower: User, followee: User):
-    print(f"{follower.username} start to following you, {followee.email}")
+def handle_follow_event():
+    print(f"You receveid a new follow!")
 
-def setup_follow_event():
-    subscribe("follow", handle_follow_event)
+def setup_follow_event(event: Event):
+    event.subscribe("follow", handle_follow_event)
