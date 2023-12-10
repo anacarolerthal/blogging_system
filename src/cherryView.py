@@ -20,6 +20,10 @@ cherrypy.config.update({
     'tools.staticdir.root': os.path.abspath(os.path.join(current_dir, '..'))
     })
 
+# read index_html file
+with open(os.path.join(static_dir, 'index_html.html'), 'r') as f:
+    index_html = f.read()
+
 # read base_html file
 with open(os.path.join(static_dir, 'base_html.html'), 'r') as f:
     base_html = f.read()
@@ -45,9 +49,12 @@ def post_to_html(posts, user=None, n_followers=None, n_following=None, logged_us
                     <input type="submit" class="follow-button" id="followButton{user_id}" value="{updated_button}">
                 </form>
             </div>
+            <div class="back-button" style="margin-left: 145px;">
+            <h3><a href="http://localhost:8080/main_page">← Voltar</a></h3>
+            </div>
             '''
         else:
-            content += '</div>'
+            content += '''</div>'''
     else:
         content = """
         <h1 style="text-align: center;">Bem-vindo ao Bloggster!</h1>
@@ -64,7 +71,6 @@ def post_to_html(posts, user=None, n_followers=None, n_following=None, logged_us
             <div class="blog-post-title">{post.title}</div>
             <div class="blog-post-content">
                 <p>{post.content}</p>
-                <p>More content goes here...</p>
             </div>
             <div class="blog-post-meta">
                 <span>Autor: <a href="users_page/{post.author_id}">{author_username}</a></span> |
@@ -191,7 +197,6 @@ def tag_search_result_html(posts):
         <div class="blog-post-title">{post.title}</div>
         <div class="blog-post-content">
             <p>{post.content}</p>
-            <p>More content goes here...</p>
         </div>
         <div class="blog-post-meta">
             <!-- <span>Autor: {post.author_id}</span> | -->
@@ -221,15 +226,15 @@ def tag_search_result_html(posts):
 def login():
     content = '''
     <h1 style="text-align: center;">Login</h1>
-    <form method="post" action="is_authenticated">
-        <input type="text" name="username" placeholder="Username">
-        <input type="password" name="password" placeholder="Password">
-        <input type="submit" value="Login">
-    </form>
-    <p style="text-align: center;">Se você ainda não tem uma conta, <a href="registering">registre-se</a>.</p>
+        <form method="post" action="is_authenticated">
+            <input type="text" name="username" placeholder="Username">
+            <input type="password" name="password" placeholder="Password">
+            <input type="submit" value="Login">
+        </form>
+        <p style="text-align: center;">Se você ainda não tem uma conta, <a href="registering">registre-se</a>.</p>
     </body>
     '''
-    return base_html.replace('''</body>''', content)
+    return index_html.replace('''</body>''', content)
 
 def register():
     content = '''
@@ -244,7 +249,7 @@ def register():
     <p style="text-align: center;">Já possui uma conta? Faça <a href="http://localhost:8080/">login</a>.</p>
     </body>
     '''
-    return base_html.replace('''</body>''', content)
+    return index_html.replace('''</body>''', content)
 
 def personal_page_html(user, posts, logged_user=None):
     followers = user.get_followers()
