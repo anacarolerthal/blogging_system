@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="/style.css">
 
     <script>
     // Function to check if the user has scrolled to the bottom
@@ -33,8 +33,61 @@
         <div class="navigation" style="text-align: center;">
             <a href="/main_page">Home</a> |
             <a href="/new_post">Nova Postagem</a> |
-            <a href="/personal_page">Meu Perfil</a> 
+            <a href="/personal_page">Meu Perfil</a> |
+            <a href="/tags_filter">Tag search</a>
         </div>
     </div>
 </body>
+
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $(document).on('click', '.like-button', function(event) {
+            event.preventDefault();
+            var post_id = $(this).closest('form').data('post-id');
+
+            // Envie a requisição AJAX
+            $.ajax({
+                type: 'POST',
+                url: '/do_like',
+                data: {post_id: post_id},
+                dataType: 'json',
+                success: function(response) {
+                    console.log(response);
+                    if (response.success) {
+                        $('#likeButton' + post_id).val(response.updated_button);
+                    }
+                },
+                error: function(error) {
+                    console.error(error);
+                }
+            });
+        });
+    });
+
+    $(document).ready(function() {
+        $(document).on('click', '.follow-button', function(event) {
+            event.preventDefault();
+            var user_id = $(this).closest('form').data('user-id');
+
+            // Envie a requisição AJAX
+            $.ajax({
+                type: 'POST',
+                url: '/do_follow',
+                data: {user_id: user_id},
+                dataType: 'json',
+                success: function(response) {
+                    console.log(response);
+                    if (response.success) {
+                        $('#followButton' + user_id).val(response.updated_button);
+                    }
+                },
+                error: function(error) {
+                    console.error(error);
+                }
+            });
+        });
+    });
+</script>
+
 </html>

@@ -4,9 +4,11 @@ from content import Post, Reply
 from users import User
 from tags import Tag
 from model import BlogModel
+from customExceptions import *
 import utils
 import re
 import os
+import json
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 static_dir = os.path.join(current_dir, 'html')
@@ -15,6 +17,7 @@ static_dir = os.path.abspath(static_dir)
 cherrypy.config.update({
     'tools.staticdir.on': True,
     'tools.staticdir.dir': static_dir,
+    'tools.staticdir.root': os.path.abspath(os.path.join(current_dir, '..'))
     })
 
 # read base_html file
@@ -22,21 +25,134 @@ with open(os.path.join(static_dir, 'base_html.html'), 'r') as f:
     base_html = f.read()
 
 
-def post_to_html(posts, user=None, n_followers=None, n_following=None):
+def post_to_html(posts, user=None, n_followers=None, n_following=None, logged_user=None):
     if user is not None and n_followers is not None and n_following is not None:
+        user_id = user.get_id()
+        user_name = user.get_username()
         content = f'''
-        <div class="user-info">
-            <h2>Bem-vindo ao Bloggster!</h2>
-            <h3>Seguidores: {n_followers} | Seguindo: {n_following} |  <a href="/followers_page">Ver</a></h3>
-            <p>Deseja escrever uma <a href="http://localhost:8080/new_post">Nova Postagem</a>?</p>
-        </div>
-        '''
+            <div class="user-info">
+                <h2>@{user_name}</h2>
+                <h3>Seguidores: {n_followers} | Seguindo: {n_following} |  <a href="/followers_page/{user_id}">Ver</a></h3>
+                <p>Deseja escrever uma <a href="http://localhost:8080/new_post">Nova Postagem</a>?</p>
+            '''
+        if logged_user is not None:
+            if user_id in logged_user.get_following():
+                updated_button = "Deixar de Seguir"
+            else:
+                updated_button = "Seguir"
+            content += f'''
+                <form method="post" action="/do_follow" class="follow-form" id="follow-form" data-user-id="{user_id}">
+                    <input type="hidden" name="user_id" value={user_id}>
+                    <input type="submit" class="follow-button" id="followButton{user_id}" value="{updated_button}">
+                </form>
+            </div>
+            '''
+        else:
+            content += '</div>'
     else:
         content = """
         <h1 style="text-align: center;">Bem-vindo ao Bloggster!</h1>
-        <p style="text-align: center;">Deseja escrever uma <a href="http://localhost:8080/new_post">Nova Postagem</a>?</p>  
+        <p style="text-align: center;">Deseja escrever uma <a href="http://localhost:8080/new_post">Nova Postagem</a>?</p>
         """
 
+    for post in posts:
+        # get author username
+        author_id = post.author_id
+        author_username = BlogModel().get_username_by_user_id(author_id)
+
+        content += f'''
+    <div class="blog-post">
+        <div class="blog-post-title">{post.title}</div>
+        <div class="blog-post-content">
+            <p>{post.content}</p>
+            <p>More content goes here...</p>
+        </div>
+        <div class="blog-post-meta">
+            <span>Author: <a href="users_page/{post.author_id}">{author_username}</a></span> |
+            <span>Date: {post.date}</span>
+            <span>Tags: {post.tags}</span>
+        </div>
+        <div class="blog-post-do-comment">
+            <form method="post" action="do_comment" class="new-comment-form">
+                <input type="hidden" name="post_id" value={post.id}>
+                <textarea type="text" id="content" name="content" placeholder="Comente sobre" rows="4" required></textarea>
+                <input type="submit" value="Comentar">
+            </form>
+        </div>
+        <div class="blog-post-likes">
+            <form method="post" action="do_like" class="like-form" id="like-form" data-post-id="{post.id}">
+                <input type="hidden" name="post_id" value={post.id}>
+                <input type="submit" class="like-button" id="likeButton{post.id}" value="Like">
+            </form>
+        </div>
+        <div class="blog-post-comments">
+            Veja os <a href="get_post_comments/postId={post.id}">comentários</a>
+        </div>
+    </div>
+</body>
+'''
+    return base_html.replace('''</body>''', content)
+
+def new_post_to_html():
+    # Renderiza a página para criar uma nova postagem
+    content = """
+    <form method="post" action="create_post" class="new-post-form">
+        <label for="title">Título:</label>
+        <input type="text" id="title" name="title" placeholder="Sobre o que voce quer falar?" required>
+
+        <label for="content">Conteúdo:</label>
+        <textarea type="text" id="content" name="content" placeholder="Disserte sobre o assunto" rows="15" required></textarea>
+
+        <label for="tags">Tags:</label>
+        <input type="text" name="tags" placeholder="Tags">
+
+        <input type="submit" value="Postar">
+    </form>
+    </body>
+    """
+    return base_html.replace('''</body>''', content)
+
+def comments_to_html(comments):
+    content = ''
+    for comment in comments:
+        content += f'''
+        <div class="comment">
+            <div class="comment-meta">
+                <span>Author: {comment.author_id}</span> |
+                <span>Date: {comment.date}</span>
+            </div>
+            <div class="comment-content">
+                <p>{comment.content}</p>
+            </div>
+        </div>
+    </body>
+    '''
+    content += '''<div class="back-button">
+            <h2><a href="http://localhost:8080/main_page">← Voltar</a></h2>
+        </div>'''
+    return base_html.replace('''</body>''', content)
+
+def tag_search_html():
+    content = '''
+    <h1 style="text-align: center;">Search by tag</h1>
+    <form method="post" action="tag_search_result">
+        <input type="text" name="tag" placeholder="Tag">
+        <input type="submit" value="Search">
+    </form>
+    </body>
+</html>
+    '''
+    return base_html.replace('''</body>
+</html>''', content)
+
+def tag_search_result_html(posts):
+    content = '''
+    <h1 style="text-align: center;">Search by tag</h1>
+    <form method="post" action="tag_search_result">
+        <input type="text" name="tag" placeholder="Tag">
+        <input type="submit" value="Search">
+    </form>
+    '''
     for post in posts:
         content += f'''
     <div class="blog-post">
@@ -46,7 +162,7 @@ def post_to_html(posts, user=None, n_followers=None, n_following=None):
             <p>More content goes here...</p>
         </div>
         <div class="blog-post-meta">
-            <span>Author: <a href="users_page/{post.author_id}">{post.author_id}</a></span> |
+            <span>Author: {post.author_id}</span> |
             <span>Date: {post.date}</span>
             <span>Tags: {post.tags}</span>
         </div>
@@ -71,44 +187,6 @@ def post_to_html(posts, user=None, n_followers=None, n_following=None):
     return base_html.replace('''</body>
 </html>''', content)
 
-def new_post_to_html():
-    # Renderiza a página para criar uma nova postagem
-    content = """
-    <form method="post" action="create_post" class="new-post-form">
-        <label for="title">Título:</label>
-        <input type="text" id="title" name="title" placeholder="Sobre o que voce quer falar?" required>
-
-        <label for="content">Conteúdo:</label>
-        <textarea type="text" id="content" name="content" placeholder="Disserte sobre o assunto" rows="15" required></textarea>
-
-        <label for="tags">Tags:</label>
-        <input type="text" name="tags" placeholder="Tags">
-
-        <input type="submit" value="Postar">
-    </form>
-    """
-    return base_html.replace('''</body>
-</html>''', content)
-
-def comments_to_html(comments):
-    content = ''
-    for comment in comments:
-        content += f'''
-        <div class="comment">
-            <div class="comment-meta">
-                <span>Author: {comment.author_id}</span> |
-                <span>Date: {comment.date}</span>
-            </div>
-            <div class="comment-content">
-                <p>{comment.content}</p>
-            </div>
-        </div>
-    </body>
-    </html>
-    '''
-    return base_html.replace('''</body>
-</html>''', content)
-
 def login():
     content = '''
     <h1 style="text-align: center;">Login</h1>
@@ -119,10 +197,8 @@ def login():
     </form>
     <p style="text-align: center;">Se você ainda não tem uma conta, <a href="registering">registre-se</a>.</p>
     </body>
-</html>
     '''
-    return base_html.replace('''</body>
-</html>''', content)
+    return base_html.replace('''</body>''', content)
 
 def register():
     content = '''
@@ -135,16 +211,14 @@ def register():
     </form>
     <p style="text-align: center;">Já possui uma conta? Faça <a href="http://localhost:8080/">login</a>.</p>
     </body>
-</html>
     '''
-    return base_html.replace('''</body>
-</html>''', content)
+    return base_html.replace('''</body>''', content)
 
-def personal_page_html(user, posts):
+def personal_page_html(user, posts, logged_user=None):
     followers = user.get_followers()
     following = user.get_following()
 
-    return post_to_html(posts, user=user, n_followers=len(followers), n_following=len(following))
+    return post_to_html(posts, user=user, n_followers=len(followers), n_following=len(following), logged_user=logged_user)
 
 def followers_page_html(user, followers):
     content = f'''
@@ -170,13 +244,11 @@ def followers_page_html(user, followers):
     </div>
     <br>
     <div class="back-button">
-        <h2><a href="http://localhost:8080/personal_page">← Voltar</a></h2>
+        <h2><a href="http://localhost:8080/users_page/'''+str(user.get_id())+'''">← Voltar</a></h2>
     </div>
     </body>
-    </html>
         '''
-    return base_html.replace('''</body>
-</html>''', content)
+    return base_html.replace('''</body>''', content)
 
 
 class BlogView(object):
@@ -196,11 +268,11 @@ class BlogView(object):
         tagged_posts =[]
         for post in posts:
             tag_ids = self.model.get_tags_for_post(post.id)
-            print(tag_ids)
             # get tag names from tag ids
             tags = []
             for tag_id in tag_ids:
-                tags.append(self.model.get_tag_name_by_id(tag_id))
+                if tag_id is not None:
+                    tags.append(self.model.get_tag_name_by_id(tag_id))
             # add tags to post
             post.tags = tags
             tagged_posts.append(post)
@@ -221,7 +293,8 @@ class BlogView(object):
             # get tag names from tag ids
             tags = []
             for tag_id in tag_ids:
-                tags.append(self.model.get_tag_name_by_id(tag_id))
+                if tag_id is not None:
+                    tags.append(self.model.get_tag_name_by_id(tag_id))
             # add tags to post
             post.tags = tags
             tagged_user_posts.append(post)
@@ -231,14 +304,51 @@ class BlogView(object):
         if len(tagged_user_posts) == 0:
             return personal_page_html(self.user, tagged_user_posts) + '<p style="text-align: center;">Você ainda não tem nenhuma postagem. Clique em <a href="http://localhost:8080/new_post">"Nova Postagem"</a> para começar a blogar!</p>'
         return personal_page_html(self.user, tagged_user_posts)
+
+    @cherrypy.expose
+    def tags_filter(self):
+        return tag_search_html()
     
     @cherrypy.expose
-    def followers_page(self):
-        if self.user_id is None:
-            return login()
-        followers = self.user.get_followers()
-        return followers_page_html(self.user, followers)
+    def tag_search_result(self, tag):
+        # check if tag exists
+        if not self.model.check_if_tag_in_db(tag):
+            return tag_search_result_html([])
+        # get tag id from tag name
+        tag_id = self.model.get_tag_id_by_name(tag)
+        post_ids = self.model.get_post_id_by_tag(tag_id)
+        # for each post id, get post data
+        posts = []
+        for post_id in post_ids:
+            posts.append(utils.transformPostDataToObject(self.model.get_post_by_post_id(post_id)))
+        tagged_posts =[]
+        # get post tags
+        for post in posts:
+            tag_ids = self.model.get_tags_for_post(post.id)
+            # get tag names from tag ids
+            tags = []
+            for tag_id in tag_ids:
+                if tag_id is not None:
+                    tags.append(self.model.get_tag_name_by_id(tag_id))
+            # add tags to post
+            post.tags = tags
+            tagged_posts.append(post)
+        tagged_posts.reverse()
+        return tag_search_result_html(tagged_posts)
     
+    @cherrypy.expose
+    def followers_page(self, user_id):
+        #if self.user_id is None:
+        #    return login()
+        username = self.model.get_username_by_user_id(int(user_id))
+        # create user object
+        user = User(
+            username=username
+        )
+        user.set_id(int(user_id))
+        # get user followers
+        followers = user.get_followers()
+        return followers_page_html(user, followers)
 
     @cherrypy.expose
     def users_page(self, author_id):
@@ -257,12 +367,13 @@ class BlogView(object):
             # get tag names from tag ids
             tags = []
             for tag_id in tag_ids:
-                tags.append(self.model.get_tag_name_by_id(tag_id))
+                if tag_id is not None:
+                    tags.append(self.model.get_tag_name_by_id(tag_id))
             # add tags to post
             post.tags = tags
             tagged_user_posts.append(post)
         tagged_user_posts.reverse()
-        return personal_page_html(some_other_user, tagged_user_posts)
+        return personal_page_html(some_other_user, tagged_user_posts, self.user)
 
     @cherrypy.expose
     def new_post(self):
@@ -278,21 +389,16 @@ class BlogView(object):
         post_tags = []
         # for each word in tags, create a tag object and publish it
         for tag in tags.split():
-            print(tag)
             tg = Tag(tag_name=tag)
             tg.publish()
             post_tags.append(tag)
 
-        print(post_tags)
-        
         post = Post(
             author_id=self.user_id,
             title=title,
             content=content,
             tags=post_tags
         )
-
-        print(post.tags)
 
         post.publish()
         return self.main_page()
@@ -316,7 +422,7 @@ class BlogView(object):
         else:
             # Authentication failed, display an error message on the login page
             error_message = "Invalid username or password. Please try again."
-            login_form = login() + f'<p style="color: red;">{error_message}</p>'
+            login_form = login() + f'<p style="color: red; text-align:center;">{error_message}</p>'
             return login_form
 
     @cherrypy.expose
@@ -336,6 +442,30 @@ class BlogView(object):
         query_string = "postId="+post_id
         id = reply.publish()
         return self.get_post_comments(query_string)
+    
+    @cherrypy.expose
+    def do_follow(self, user_id):
+        try:
+            self.user.follow(int(user_id))
+            # return to that user's page
+            #return self.users_page(int(user_id))
+            updated_button = "Deixar de Seguir"
+            success = True
+        except AlreadyFollowing as e:
+            # unfollow
+            #self.user.unfollow(int(user_id))
+            #return self.users_page(int(user_id))
+            self.user.unfollow(int(user_id))
+            updated_button = "Seguir"
+        except FollowInvalidUser as e:
+            # invalid user
+            return self.users_page(int(user_id))
+        except CannotFollowSelf as e:
+            # cannot follow self 
+            # add message to page
+            return self.users_page(int(user_id)) + '<p style="text-align: center;">Não é possível seguir a si mesmo.</p>'
+        return json.dumps({'success': success, 'updated_button': updated_button})
+
 
     @cherrypy.expose
     def get_post_comments(self, postId):
@@ -343,23 +473,30 @@ class BlogView(object):
         matches = re.findall(pattern, postId)
         id = int(matches[0])
         comments = self.model.get_comments_for_post(id)
-        if comments is not None:
+        if len(comments) > 0:
             comments = [utils.transformReplyDataToObject(reply) for reply in comments]
             comments.reverse()
             return comments_to_html(comments)
         else:
-            return "Nao ha comentarios"
+            return comments_to_html([]) + f'<p style="text-align: center;">Ainda não há comentários. Seja o primeiro a comentar!</p>'
 
     @cherrypy.expose
     def do_like(self, post_id):
         try:
             self.user.like(post_id)
-            return self.main_page().replace('''<input type="submit" value="Like">''',
-                                            '''<input type="submit" value="Unlike">''')
+            #return self.main_page().replace('''<input type="submit" value="Like">''','''<input type="submit" value="Unlike">''')
+            #updated_button = f'id="likeButton_{post_id}" value="Unlike"'
+            updated_button = "Unlike"
+            success = True
         except Exception as e:
             # dislike
             self.user.unlike(post_id)
-            return self.main_page()
+            #updated_button = f'id="likeButton_{post_id}" value="Like"'
+            #return self.main_page()
+            #return self.main_page().replace(f'id="likeButton_{post_id}" value="Like"', updated_button)
+            updated_button = "Like"
+            success = True
+        return json.dumps({'success': success, 'updated_button': updated_button})
 
     @cherrypy.expose
     def is_registered(self, username=None, password=None, email=None):
