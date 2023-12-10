@@ -29,7 +29,7 @@ class CreateTaggedPost(DBCommand):
         self.post_id = post_id
         self.tag_id = tag_id
 
-    def create_tagged_post(self):
+    def execute(self):
         self.cursor.execute('INSERT INTO posttag (post_id, tag_id) VALUES (%s,%s)', (self.post_id, self.tag_id))
         self.connection.commit()    
 
@@ -52,7 +52,7 @@ class CreateUserCommand(DBCommand):
         self.password = password
         self.email = email
     
-    def add_user(self):
+    def execute(self):
         self.cursor.execute('INSERT INTO baseuser (username, passw, email, is_moderator) VALUES (%s, %s, %s, %s) RETURNING id', (self.username, self.password, self.email, False))
         user_id = self.cursor.fetchone()[0]
         self.connection.commit()
@@ -64,7 +64,7 @@ class CreateFollowCommand(DBCommand):
         self.follower = follower
         self.followee = followee
     
-    def follow(self):
+    def execute(self):
         self.cursor.execute('INSERT INTO userfollows (follower_id, followee_id) VALUES (%s,%s)', (self.follower, self.followee))
         self.connection.commit()
 
@@ -74,7 +74,7 @@ class CreateLikeCommand(DBCommand):
         self.user_id = user_id
         self.post_id = post_id
 
-    def like(self):
+    def execute(self):
         self.cursor.execute('INSERT INTO postlikes (user_id, post_id) VALUES (%s,%s)', (self.user_id, self.post_id))
         self.connection.commit()
 
@@ -83,7 +83,7 @@ class CreateTag(DBCommand):
         super().__init__(db_connection)
         self.tag_name = tag_name
 
-    def create_tag(self):
+    def execute(self):
         self.cursor.execute('INSERT INTO tag (tag_name) VALUES (%s) RETURNING tag_id', (self.tag_name,))
         tag_id = self.cursor.fetchone()[0]
         self.connection.commit()
@@ -95,7 +95,7 @@ class DeleteLikeCommand(DBCommand):
         self.user_id = user_id
         self.post_id = post_id
 
-    def unlike(self):
+    def execute(self):
         self.cursor.execute('DELETE FROM postlikes WHERE user_id = %s AND post_id = %s', (self.user_id, self.post_id))
         self.connection.commit()
 
@@ -105,7 +105,7 @@ class DeleteFollowCommand(DBCommand):
         self.follower = follower
         self.followee = followee
     
-    def unfollow(self):
+    def execute(self):
         self.cursor.execute('DELETE FROM userfollows WHERE follower_id = %s AND followee_id = %s', (self.follower, self.followee))
         self.connection.commit()  
 
@@ -114,7 +114,7 @@ class GetTagsByPost(DBCommand):
         super().__init__(db_connection)
         self.post_id = post_id
 
-    def get_tags_for_post(self):
+    def execute(self):
         self.cursor.execute('SELECT tag_id FROM posttag WHERE post_id = %s', (self.post_id,))
         out = self.cursor.fetchall()
         tag_id_list = []
@@ -129,7 +129,7 @@ class GetTagNameById(DBCommand):
 
     def execute(self):
         self.cursor.execute('SELECT tag_name FROM tag WHERE tag_id = %s', (self.tag_id,))
-        return self.cursor.fetchone()
+        return self.cursor.fetchone()[0]
 
 class GetTagIdByName(DBCommand):
     def __init__(self, db_connection, tag_name):
@@ -153,7 +153,7 @@ class GetPostsLikedByUser(DBCommand):
         super().__init__(db_connection)
         self.user_id = user_id
 
-    def get_all_liked_posts_by_user(self):
+    def execute(self):
         self.cursor.execute('SELECT post_id FROM postlikes WHERE user_id = %s', (self.user_id,))
         out = self.cursor.fetchall()
         id_lists = []
@@ -184,7 +184,7 @@ class GetFollowingUsersByUserId(DBCommand):
         super().__init__(db_connection)
         self.user_id = user_id
 
-    def get_following_user(self):
+    def execute(self):
         self.cursor.execute('SELECT followee_id FROM userfollows WHERE follower_id = %s', (self.user_id,))
         out = self.cursor.fetchall()
         id_lists = []
@@ -198,7 +198,7 @@ class CheckUserCommand(DBCommand):
         self.username = username
         self.password = password
 
-    def check_user(self):
+    def execute(self):
         self.cursor.execute('SELECT * FROM baseuser WHERE username = %s AND passw = %s', (self.username, self.password))
         return bool(self.cursor.fetchone())
 
@@ -207,7 +207,7 @@ class CheckUserInDBCommand(DBCommand):
         super().__init__(db_connection)
         self.user_id = user_id
 
-    def check_if_user_in_db(self):
+    def execute(self):
         self.cursor.execute('SELECT * FROM baseuser WHERE id = %s', (self.user_id,))
         return bool(self.cursor.fetchone())
 
@@ -216,7 +216,7 @@ class CheckPostInDbCommand(DBCommand):
         super().__init__(db_connection)
         self.post_id = post_id
 
-    def check_if_post_in_db(self):
+    def execute(self):
         self.cursor.execute('SELECT * FROM post WHERE id = %s', (self.post_id,))
         return bool(self.cursor.fetchone())
 
@@ -226,7 +226,7 @@ class CheckPostAlreadyLiked(DBCommand):
         self.user_id = user_id
         self.post_id = post_id
 
-    def check_if_post_already_liked(self, user_id, post_id):
+    def execute(self, user_id, post_id):
         self.cursor.execute('SELECT * FROM postlikes WHERE user_id = %s AND post_id = %s', (self.user_id, self.post_id))
         return bool(self.cursor.fetchone())
 
@@ -235,7 +235,7 @@ class CheckTagAlreadyInDB(DBCommand):
         super().__init__(db_connection)
         self.tag_name=tag_name
 
-    def check_if_tag_in_db(self):
+    def execute(self):
         self.cursor.execute('SELECT * FROM tag WHERE tag_name = %s', (self.tag_name,))
         return bool(self.cursor.fetchone())
 
@@ -244,7 +244,7 @@ class GetUserIdByUsernameCommand(DBCommand):
         super().__init__(db_connection)
         self.username = username
 
-    def get_user_id_by_username(self):
+    def execute(self):
         self.cursor.execute('SELECT id FROM baseuser WHERE username = %s', (self.username,))
         return int(self.cursor.fetchone()[0])
 
@@ -253,7 +253,37 @@ class GetUsernameByUserIdCommand(DBCommand):
         super().__init__(db_connection)
         self.user_id = user_id
 
-    def get_username_by_user_id(self):
+    def execute(self):
         self.cursor.execute('SELECT username FROM baseuser WHERE id = %s', (self.user_id,))
         return self.cursor.fetchone()[0]
+    
+class GetTagIdByNameCommand(DBCommand):
+    def __init__(self, db_connection, tag_name):
+        super().__init__(db_connection)
+        self.tag_name = tag_name
 
+    def execute(self):
+        self.cursor.execute('SELECT tag_id FROM tag WHERE tag_name = %s', (self.tag_name,))
+        return int(self.cursor.fetchone()[0])
+    
+class GetPostIdByTagIdCommand(DBCommand):
+    def __init__(self, db_connection, tag_id):
+        super().__init__(db_connection)
+        self.tag_id = tag_id
+
+    def execute(self):
+        self.cursor.execute('SELECT post_id FROM posttag WHERE tag_id = %s', (self.tag_id,))
+        out = self.cursor.fetchall()
+        post_id_list = []
+        for post_id in out:
+            post_id_list.append(post_id)
+        return post_id_list
+
+class GetPostByPostIdCommand(DBCommand):
+    def __init__(self, db_connection, post_id):
+        super().__init__(db_connection)
+        self.post_id = post_id
+
+    def execute(self):
+        self.cursor.execute('SELECT * FROM post WHERE id = %s', (self.post_id,))
+        return self.cursor.fetchone()

@@ -264,3 +264,15 @@ class BlogModel:
     def get_username_by_user_id(self, user_id):
         command = GetUsernameByUserIdCommand(self.connection, user_id)
         return self.execute_command(command)
+    
+    def get_tag_id_by_name(self, tag_name):
+        command = GetTagIdByName(self.connection, tag_name)
+        return self.execute_command(command)
+    
+    def get_post_id_by_tag(self, tag_id):
+        command = GetPostIdByTagIdCommand(self.connection, tag_id)
+        return self.execute_command(command)
+    
+    def get_post_by_post_id(self, post_id):
+        command = GetPostByPostIdCommand(self.connection, post_id)
+        return self.execute_command(command)
