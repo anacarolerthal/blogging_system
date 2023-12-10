@@ -41,3 +41,7 @@ class AlreadyNotLiked(Exception):
     def __init__(self) -> None:
         super().__init__("Post já descurtido.")
 
+class UserIsNone(Exception):
+    def __init__(self) -> None:
+        # do not print anything
+        pass

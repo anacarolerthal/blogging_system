@@ -34,6 +34,3 @@ def transformUserDataToObject(db_data: tuple) -> User:
         following=None
     )
     return user
-    
-
-    

@@ -5,6 +5,7 @@ from users import User
 from tags import Tag
 from model import BlogModel
 from customExceptions import *
+from refactorFunctions import *
 import utils
 import re
 import os
@@ -205,57 +206,92 @@ class BlogView(object):
 
     @cherrypy.expose
     def main_page(self):
-        posts = [utils.transformPostDataToObject(post) for post in self.model.get_all_posts()]
-        # get post tags
-        tagged_posts =[]
-        for post in posts:
-            tag_ids = self.model.get_tags_for_post(post.id)
-            # get tag names from tag ids
-            tags = []
-            for tag_id in tag_ids:
-                tags.append(self.model.get_tag_name_by_id(tag_id))
-            # add tags to post
-            post.tags = tags
-            tagged_posts.append(post)
-        tagged_posts.reverse()
-        self.posts = tagged_posts
+        # OLD VERSION
+        # posts = [utils.transformPostDataToObject(post) for post in self.model.get_all_posts()]
+        # # get post tags
+        # tagged_posts =[]
+        # for post in posts:
+        #     tag_ids = self.model.get_tags_for_post(post.id)
+        #     # get tag names from tag ids
+        #     tags = []
+        #     for tag_id in tag_ids:
+        #         tags.append(self.model.get_tag_name_by_id(tag_id))
+        #     # add tags to post
+        #     post.tags = tags
+        #     tagged_posts.append(post)
+        # tagged_posts.reverse()
+        
+        # LAST VERSION
+        self.posts = utils.returnPostsToMainPage(self.model)
         return post_to_html(self.posts)
 
+    # OLD VERSION of personal_page
+    # @cherrypy.expose
+    # def personal_page(self):
+    #     if self.user_id is None:
+    #         return login()
+    #     # get user posts
+    #     user_posts = [utils.transformPostDataToObject(post) for post in self.model.get_posts_for_user(self.user_id)]
+    #     tagged_user_posts =[]
+    #     # get post tags
+    #     for post in user_posts:
+    #         tag_ids = self.model.get_tags_for_post(post.id)
+    #         # get tag names from tag ids
+    #         tags = []
+    #         for tag_id in tag_ids:
+    #             tags.append(self.model.get_tag_name_by_id(tag_id))
+    #         # add tags to post
+    #         post.tags = tags
+    #         tagged_user_posts.append(post)
+    #     tagged_user_posts.reverse()
+        
+    #     # if user has no posts, display a message
+    #     if len(tagged_user_posts) == 0:
+    #         return personal_page_html(self.user, tagged_user_posts) + '<p style="text-align: center;">Você ainda não tem nenhuma postagem. Clique em <a href="http://localhost:8080/new_post">"Nova Postagem"</a> para começar a blogar!</p>'
+    #     return personal_page_html(self.user, tagged_user_posts)
+    
+    # REFACTORED VERSION of personal_page
     @cherrypy.expose
     def personal_page(self):
-        if self.user_id is None:
+        
+        try:
+            self.user = utils.transformUserDataToObject(self.model.get_user_by_id(self.user_id))
+        except UserIsNone as e:
+            # invalid user
             return login()
-        # get user posts
-        user_posts = [utils.transformPostDataToObject(post) for post in self.model.get_posts_for_user(self.user_id)]
-        tagged_user_posts =[]
-        # get post tags
-        for post in user_posts:
-            tag_ids = self.model.get_tags_for_post(post.id)
-            # get tag names from tag ids
-            tags = []
-            for tag_id in tag_ids:
-                tags.append(self.model.get_tag_name_by_id(tag_id))
-            # add tags to post
-            post.tags = tags
-            tagged_user_posts.append(post)
-        tagged_user_posts.reverse()
+        
+        tagged_user_posts = utils.returnTaggedUserPosts(self.model, self.user_id)
         
         # if user has no posts, display a message
         if len(tagged_user_posts) == 0:
             return personal_page_html(self.user, tagged_user_posts) + '<p style="text-align: center;">Você ainda não tem nenhuma postagem. Clique em <a href="http://localhost:8080/new_post">"Nova Postagem"</a> para começar a blogar!</p>'
+        
         return personal_page_html(self.user, tagged_user_posts)
+
+    # OLD VERSION of followers_page
+    # @cherrypy.expose
+    # def followers_page(self, user_id):
+    #     #if self.user_id is None:
+    #     #    return login()
+    #     username = self.model.get_username_by_user_id(int(user_id))
+    #     # create user object
+    #     user = User(
+    #         username=username
+    #     )
+    #     user.set_id(int(user_id))
+    #     # get user followers
+    #     followers = user.get_followers()
+    #     return followers_page_html(user, followers)
     
+    # REFACTORED VERSION of followers_page
     @cherrypy.expose
     def followers_page(self, user_id):
-        #if self.user_id is None:
-        #    return login()
-        username = self.model.get_username_by_user_id(int(user_id))
-        # create user object
-        user = User(
-            username=username
-        )
-        user.set_id(int(user_id))
-        # get user followers
+        try:
+            user = utils.transformUserDataToObject(self.model.get_user_by_id(int(user_id)))
+        except UserIsNone as e:
+            # invalid user
+            return login()
+        
         followers = user.get_followers()
         return followers_page_html(user, followers)
 
