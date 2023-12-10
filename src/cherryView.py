@@ -5,6 +5,7 @@ from users import User
 from tags import Tag
 from model import BlogModel
 from customExceptions import *
+import refactFunctions as rf
 import utils
 import re
 import os
@@ -280,7 +281,7 @@ class BlogView(object):
     # REFACTORED VERSION OF main_page
     @cherrypy.expose
     def main_page(self):
-        tagged_posts = utils.getTaggedPosts(self.model)
+        tagged_posts = rf.getTaggedPosts(self.model)
         self.posts = tagged_posts
         return post_to_html(self.posts, self.user)
 
@@ -317,7 +318,7 @@ class BlogView(object):
             return login()
         
         # get user posts
-        user_posts = utils.getTaggedPosts(self.model, self.user_id)
+        user_posts = rf.getTaggedPosts(self.model, self.user_id)
         
         # if user has no posts, display a message
         if len(user_posts) == 0:
@@ -328,7 +329,10 @@ class BlogView(object):
     @cherrypy.expose
     def tags_filter(self):
         return tag_search_html()
-    
+
+# ---------------------------------------------------
+
+    # OLD VERSION OF tag_search_result
     @cherrypy.expose
     def tag_search_result(self, tag):
         # check if tag exists
@@ -356,44 +360,61 @@ class BlogView(object):
         tagged_posts.reverse()
         return tag_search_result_html(tagged_posts)
     
+# ---------------------------------------------------
+
+    # OLD VERSION OF followers_page    
+    # @cherrypy.expose
+    # def followers_page(self, user_id):
+    #     #if self.user_id is None:
+    #     #    return login()
+    #     username = self.model.get_username_by_user_id(int(user_id))
+    #     # create user object
+    #     user = User(
+    #         username=username
+    #     )
+    #     user.set_id(int(user_id))
+    #     # get user followers
+    #     followers = user.get_followers()
+    #     return followers_page_html(user, followers)
+    
+    # REFACTORED VERSION OF followers_page
     @cherrypy.expose
     def followers_page(self, user_id):
-        #if self.user_id is None:
-        #    return login()
-        username = self.model.get_username_by_user_id(int(user_id))
-        # create user object
-        user = User(
-            username=username
-        )
-        user.set_id(int(user_id))
-        # get user followers
-        followers = user.get_followers()
+        user, followers = rf.getUserFollowers(self.model, int(user_id))
         return followers_page_html(user, followers)
 
+    # OLD VERSION OF users_page
+    # @cherrypy.expose
+    # def users_page(self, author_id):
+    #     username = self.model.get_username_by_user_id(int(author_id))
+    #     # create user object
+    #     some_other_user = User(
+    #         username=username
+    #     )
+    #     some_other_user.set_id(int(author_id))
+    #     # get user posts
+        # user_posts = [utils.transformPostDataToObject(post) for post in self.model.get_posts_for_user(author_id)]
+    #     tagged_user_posts =[]
+    #     # get post tags
+    #     for post in user_posts:
+    #         tag_ids = self.model.get_tags_for_post(post.id)
+    #         # get tag names from tag ids
+    #         tags = []
+    #         for tag_id in tag_ids:
+    #             if tag_id is not None:
+    #                 tags.append(self.model.get_tag_name_by_id(tag_id))
+    #         # add tags to post
+    #         post.tags = tags
+    #         tagged_user_posts.append(post)
+    #     tagged_user_posts.reverse()
+    #     return personal_page_html(some_other_user, tagged_user_posts, self.user)
+    
+    # REFACTORED VERSION OF users_page
     @cherrypy.expose
     def users_page(self, author_id):
-        username = self.model.get_username_by_user_id(int(author_id))
-        # create user object
-        some_other_user = User(
-            username=username
-        )
-        some_other_user.set_id(int(author_id))
-        # get user posts
-        user_posts = [utils.transformPostDataToObject(post) for post in self.model.get_posts_for_user(author_id)]
-        tagged_user_posts =[]
-        # get post tags
-        for post in user_posts:
-            tag_ids = self.model.get_tags_for_post(post.id)
-            # get tag names from tag ids
-            tags = []
-            for tag_id in tag_ids:
-                if tag_id is not None:
-                    tags.append(self.model.get_tag_name_by_id(tag_id))
-            # add tags to post
-            post.tags = tags
-            tagged_user_posts.append(post)
-        tagged_user_posts.reverse()
-        return personal_page_html(some_other_user, tagged_user_posts, self.user)
+        some_other_user = rf.getUserInstanceWithUsername(self.model, int(author_id))
+        posts = rf.getTaggedPosts(self.model, int(author_id))
+        return personal_page_html(some_other_user, posts, self.user)
 
     @cherrypy.expose
     def new_post(self):
