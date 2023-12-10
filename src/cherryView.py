@@ -108,6 +108,9 @@ def comments_to_html(comments):
     </body>
     </html>
     '''
+    content += '''<div class="back-button">
+            <h2><a href="http://localhost:8080/main_page">← Voltar</a></h2>
+        </div>'''
     return base_html.replace('''</body>
 </html>''', content)
 
@@ -324,7 +327,7 @@ class BlogView(object):
         else:
             # Authentication failed, display an error message on the login page
             error_message = "Invalid username or password. Please try again."
-            login_form = login() + f'<p style="color: red;">{error_message}</p>'
+            login_form = login() + f'<p style="color: red; text-align:center;">{error_message}</p>'
             return login_form
 
     @cherrypy.expose
@@ -351,12 +354,12 @@ class BlogView(object):
         matches = re.findall(pattern, postId)
         id = int(matches[0])
         comments = self.model.get_comments_for_post(id)
-        if comments is not None:
+        if len(comments) > 0:
             comments = [utils.transformReplyDataToObject(reply) for reply in comments]
             comments.reverse()
             return comments_to_html(comments)
         else:
-            return comments_to_html([]) + '<p style="text-align: center;">Ainda não há comentários. Seja o primeiro a comentar!</p>'
+            return comments_to_html([]) + f'<p style="text-align: center;">Ainda não há comentários. Seja o primeiro a comentar!</p>'
 
     @cherrypy.expose
     def do_like(self, post_id):
