@@ -24,8 +24,22 @@ class BaseUser(ABC):
     password: str
     email: str
 
-    # def set_user_id(self, user_id: int) -> None:
-    #     self.id = user_id
+    def set_id(self, user_id) -> None:
+        if type(user_id) != int:
+            raise TypeError("Tipo inválido de id. Ids devem ser inteiros.")
+        self.__id = user_id
+
+    def get_id(self) -> int:
+        """Get the id of the user"""
+        return self.__id
+
+    def get_username(self) -> str:
+        """Get the username of the user"""
+        return self.__username
+
+    def get_email(self) -> str:
+        """Get the email of the user"""
+        return self.__email
 
     # @abstractmethod
     # def register(self, username: str, password: str, email: str) -> None:
@@ -56,18 +70,6 @@ class User(BaseUser):
         self.__followers = followers if followers is not None else []
         self.__following = following if following is not None else []
 
-    def get_id(self) -> int:
-        """Get the id of the user"""
-        return self.__id
-
-    def get_username(self) -> str:
-        """Get the username of the user"""
-        return self.__username
-
-    def get_email(self) -> str:
-        """Get the email of the user"""
-        return self.__email
-
     def get_posts(self) -> List[int]:
         """Get the posts of the user"""
         return self.__posts
@@ -91,12 +93,6 @@ class User(BaseUser):
         id_self = self.get_id()
         liked_posts = BlogModel().get_all_liked_posts_by_user(id_self)
         return liked_posts
-
-    def set_id(self, user_id) -> None:
-        if type(user_id) != int:
-            raise TypeError("Tipo inválido de id. Ids devem ser inteiros.")
-        self.__id = user_id
-        pass
 
     def like(self, post_id: int) -> None:
         """Like a post"""
@@ -136,7 +132,6 @@ class User(BaseUser):
             id_self = self.get_id()
             BlogModel().follow(id_self, followee_id)
             listener.post_event("follow")
-            
 
     def unfollow(self, followee_id: int) -> None:
         """Unfollow a user"""
@@ -165,24 +160,6 @@ class Moderator(BaseUser):
         self.__username = username
         self.__password = password
         self.__email = email
-
-    def get_id(self) -> int:
-        """Get the id of the user"""
-        return self.__id
-
-    def get_username(self) -> str:
-        """Get the username of the user"""
-        return self.__username
-
-    def get_email(self) -> str:
-        """Get the email of the user"""
-        return self.__email
-
-    def set_id(self, user_id) -> None:
-        if type(user_id) != int:
-            raise TypeError("Tipo inválido de id. Ids devem ser inteiros.")
-        self.__id = user_id
-        pass
 
     def delete_post(self, post_id: int) -> None:
         """Delete a post"""
