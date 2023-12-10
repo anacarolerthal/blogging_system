@@ -416,31 +416,47 @@ class BlogView(object):
         posts = rf.getTaggedPosts(self.model, int(author_id))
         return personal_page_html(some_other_user, posts, self.user)
 
+# ---------------------------------------------------
+
     @cherrypy.expose
     def new_post(self):
         if self.user_id is None:
             return login()
         return new_post_to_html()
 
+# ---------------------------------------------------
+
+    # OLD VERSION OF create_post
+    # @cherrypy.expose
+    # def create_post(self, title, content, tags):
+    #     """
+    #     Create a post and return to the all posts page
+    #     """
+    #     post_tags = []
+    #     # for each word in tags, create a tag object and publish it
+    #     for tag in tags.split():
+    #         tg = Tag(tag_name=tag)
+    #         tg.publish()
+    #         post_tags.append(tag)
+
+    #     post = Post(
+    #         author_id=self.user_id,
+    #         title=title,
+    #         content=content,
+    #         tags=post_tags
+    #     )
+
+    #     post.publish()
+    #     return self.main_page()
+    
+    # REFACTORED VERSION OF create_post
     @cherrypy.expose
     def create_post(self, title, content, tags):
         """
         Create a post and return to the all posts page
         """
-        post_tags = []
-        # for each word in tags, create a tag object and publish it
-        for tag in tags.split():
-            tg = Tag(tag_name=tag)
-            tg.publish()
-            post_tags.append(tag)
-
-        post = Post(
-            author_id=self.user_id,
-            title=title,
-            content=content,
-            tags=post_tags
-        )
-
+        post_tags = rf.splitTags(tags)
+        post = rf.createPostWithSplitTags(self.user_id, title, content, post_tags)
         post.publish()
         return self.main_page()
 

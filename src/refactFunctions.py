@@ -1,5 +1,6 @@
 from model import BlogModel
 from utils import *
+from tags import Tag
 
 def getTaggedPosts(model: BlogModel, user_id: int = None) -> list:
     """
@@ -46,3 +47,26 @@ def getUserFollowers(model: BlogModel, user_id: int) -> list:
     user = getUserInstanceWithUsername(model, user_id)
     followers = user.get_followers()
     return user, followers
+
+def splitTags(tags: str) -> list:
+    """
+    Returns a list of tags from a string of tags.
+    """
+    post_tags = []
+    for tag in tags.split():
+        tg = Tag(tag_name = tag)
+        tg.publish()
+        post_tags.append(tg)
+    return post_tags
+
+def createPostWithSplitTags(user_id: int, title: str, content: str, tags: list) -> Post:
+    """
+    Creates a post with tags from a string of tags.
+    """
+    post = Post(
+        title=title, 
+        content=content,
+        tags=tags,
+        author_id=user_id
+        )
+    return post
