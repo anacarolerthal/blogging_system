@@ -181,7 +181,7 @@ class BlogModel:
         command = CreateReplyCommand(self.connection, reply)
         return self.execute_command(command)
     
-    def create_user(self, username, password, email):
+    def add_user(self, username, password, email):
         command = CreateUserCommand(self.connection, username, password, email)
         return self.execute_command(command)
     

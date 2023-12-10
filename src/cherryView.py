@@ -33,7 +33,6 @@ def post_to_html(posts, user=None, n_followers=None, n_following=None, logged_us
             <div class="user-info">
                 <h2>@{user_name}</h2>
                 <h3>Seguidores: {n_followers} | Seguindo: {n_following} |  <a href="/followers_page/{user_id}">Ver</a></h3>
-                <p>Deseja escrever uma <a href="http://localhost:8080/new_post">Nova Postagem</a>?</p>
             '''
         if logged_user is not None:
             if user_id in logged_user.get_following():
@@ -61,36 +60,36 @@ def post_to_html(posts, user=None, n_followers=None, n_following=None, logged_us
         author_username = BlogModel().get_username_by_user_id(author_id)
 
         content += f'''
-    <div class="blog-post">
-        <div class="blog-post-title">{post.title}</div>
-        <div class="blog-post-content">
-            <p>{post.content}</p>
-            <p>More content goes here...</p>
+        <div class="blog-post">
+            <div class="blog-post-title">{post.title}</div>
+            <div class="blog-post-content">
+                <p>{post.content}</p>
+                <p>More content goes here...</p>
+            </div>
+            <div class="blog-post-meta">
+                <span>Author: <a href="users_page/{post.author_id}">{author_username}</a></span> |
+                <span>Date: {post.date}</span>
+                <span>Tags: {post.tags}</span>
+            </div>
+            <div class="blog-post-do-comment">
+                <form method="post" action="do_comment" class="new-comment-form">
+                    <input type="hidden" name="post_id" value={post.id}>
+                    <textarea type="text" id="content" name="content" placeholder="Comente sobre" rows="4" required></textarea>
+                    <input type="submit" value="Comentar">
+                </form>
+            </div>
+            <div class="blog-post-likes">
+                <form method="post" action="do_like" class="like-form" id="like-form" data-post-id="{post.id}">
+                    <input type="hidden" name="post_id" value={post.id}>
+                    <input type="submit" class="like-button" id="likeButton{post.id}" value="Like">
+                </form>
+            </div>
+            <div class="blog-post-comments">
+                Veja os <a href="get_post_comments/postId={post.id}">comentários</a>
+            </div>
         </div>
-        <div class="blog-post-meta">
-            <span>Author: <a href="users_page/{post.author_id}">{author_username}</a></span> |
-            <span>Date: {post.date}</span>
-            <span>Tags: {post.tags}</span>
-        </div>
-        <div class="blog-post-do-comment">
-            <form method="post" action="do_comment" class="new-comment-form">
-                <input type="hidden" name="post_id" value={post.id}>
-                <textarea type="text" id="content" name="content" placeholder="Comente sobre" rows="4" required></textarea>
-                <input type="submit" value="Comentar">
-            </form>
-        </div>
-        <div class="blog-post-likes">
-            <form method="post" action="do_like" class="like-form" id="like-form" data-post-id="{post.id}">
-                <input type="hidden" name="post_id" value={post.id}>
-                <input type="submit" class="like-button" id="likeButton{post.id}" value="Like">
-            </form>
-        </div>
-        <div class="blog-post-comments">
-            Veja os <a href="get_post_comments/postId={post.id}">comentários</a>
-        </div>
-    </div>
-</body>
-'''
+    </body>
+    '''
     return base_html.replace('''</body>''', content)
 
 def new_post_to_html():
@@ -104,7 +103,7 @@ def new_post_to_html():
         <textarea type="text" id="content" name="content" placeholder="Disserte sobre o assunto" rows="15" required></textarea>
 
         <label for="tags">Tags:</label>
-        <input type="text" name="tags" placeholder="Tags">
+        <input type="text" name="tags" placeholder="Separe as Tags por espaço">
 
         <input type="submit" value="Postar">
     </form>
@@ -503,11 +502,11 @@ class BlogView(object):
         if not admin.authenticate(username, password):
             admin.register(username, password, email)
             # redirect to login page
-            return login() + '<p style="color: green;">Registrado com sucesso! Faça login.</p>'
+            return login() + '<p style="color: green; text-align: center;">Registrado com sucesso! Faça login.</p>'
         else:
             # Registration failed, display an error message on the registration page
             error_message = "Nome de usuário em uso. Por favor, tente novamente."
-            register_form = register() + f'<p style="color: red;">{error_message}</p>'
+            register_form = register() + f'<p style="color: red; text-align: center;">{error_message}</p>'
             return register_form
 
     @cherrypy.expose
