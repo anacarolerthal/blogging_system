@@ -67,8 +67,8 @@ def post_to_html(posts, user=None, n_followers=None, n_following=None, logged_us
                 <p>More content goes here...</p>
             </div>
             <div class="blog-post-meta">
-                <span>Author: <a href="users_page/{post.author_id}">{author_username}</a></span> |
-                <span>Date: {post.date}</span>
+                <span>Autor: <a href="users_page/{post.author_id}">{author_username}</a></span> |
+                <span>Data: {post.date}</span> |
                 <span>Tags: {post.tags}</span>
             </div>
             <div class="blog-post-do-comment">
@@ -117,8 +117,8 @@ def comments_to_html(comments):
         content += f'''
         <div class="comment">
             <div class="comment-meta">
-                <span>Author: {comment.author_id}</span> |
-                <span>Date: {comment.date}</span>
+                <span>Autor: {comment.author_id}</span> |
+                <span>Data: {comment.date}</span>
             </div>
             <div class="comment-content">
                 <p>{comment.content}</p>
@@ -155,6 +155,8 @@ def tag_search_result_html(posts):
     </form>
     '''
     for post in posts:
+        # get author username
+        author_username = BlogModel().get_username_by_user_id(post.author_id)
         content += f'''
     <div class="blog-post">
         <div class="blog-post-title">{post.title}</div>
@@ -163,8 +165,9 @@ def tag_search_result_html(posts):
             <p>More content goes here...</p>
         </div>
         <div class="blog-post-meta">
-            <span>Author: {post.author_id}</span> |
-            <span>Date: {post.date}</span>
+            <!-- <span>Autor: {post.author_id}</span> | -->
+            <span>Autor: <a href="users_page/{post.author_id}">{author_username}</a></span> |
+            <span>Data: {post.date}</span> |
             <span>Tags: {post.tags}</span>
         </div>
         <div class="blog-post-do-comment">
