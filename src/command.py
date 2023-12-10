@@ -46,14 +46,15 @@ class CreateReplyCommand(DBCommand):
         return id
     
 class CreateUserCommand(DBCommand):
-    def __init__(self, db_connection, username, password, email):
+    def __init__(self, db_connection, username, password, email, is_moderator):
         super().__init__(db_connection)
         self.username = username
         self.password = password
         self.email = email
+        self.is_moderator = is_moderator
     
     def execute(self):
-        self.cursor.execute('INSERT INTO baseuser (username, passw, email, is_moderator) VALUES (%s, %s, %s, %s) RETURNING id', (self.username, self.password, self.email, False))
+        self.cursor.execute('INSERT INTO baseuser (username, passw, email, is_moderator) VALUES (%s, %s, %s, %s) RETURNING id', (self.username, self.password, self.email, self.is_moderator))
         user_id = self.cursor.fetchone()[0]
         self.connection.commit()
         return user_id
@@ -302,7 +303,7 @@ class GetPostByPostIdCommand(DBCommand):
         self.cursor.execute('SELECT * FROM post WHERE id = %s', (self.post_id,))
         return self.cursor.fetchone()
     
-class GetUserByUserId(DBCommand):
+class GetUserByUserIdCommand(DBCommand):
     def __init__(self, db_connection, id):
         super().__init__(db_connection)
         self.id = id
@@ -311,3 +312,49 @@ class GetUserByUserId(DBCommand):
         self.cursor.execute('SELECT * FROM baseuser WHERE id = %s', (self.id, ))
         return self.cursor.fetchone()[0]
 
+class CheckIfUserIsBannedCommand(DBCommand):
+    def __init__(self, db_connection, id):
+        super().__init__(db_connection)
+        self.id = id
+
+    def execute(self):
+        self.cursor.execute('SELECT bannedy FROM bannedusers WHERE banned_id = %s', (self.id,))
+        return bool(self.cursor.fetchone()[0])
+
+class BanUserCommand(DBCommand):
+    def __init__(self, db_connection, banner_id, banned_id):
+        super().__init__(db_connection)
+        self.banner_id = banner_id
+        self.banned_id = banned_id
+
+    def execute(self):
+        self.cursor.execute('INSERT INTO bannedusers (banner_id, banned_id) VALUES (%s, %s)', (self.banner_id, self.banned_id))
+        self.connection.commit()
+
+class UnbanUserCommand(DBCommand):
+    def __init__(self, db_connection, banner_id, banned_id):
+        super().__init__(db_connection)
+        self.banner_id = banner_id
+        self.banned_id = banned_id
+
+    def execute(self):
+        self.cursor.execute('DELETE FROM bannedusers WHERE banner_id = %s AND banned_id = %s', (self.banner_id, self.banned_id))
+        self.connection.commit()
+
+class DeletePostCommand(DBCommand):
+    def __init__(self, db_connection, post_id):
+        super().__init__(db_connection)
+        self.post_id = post_id
+
+    def execute(self):
+        self.cursor.execute('DELETE FROM post WHERE id = %s', (self.post_id,))
+        self.connection.commit()
+
+class CheckIfModeratorCommand(DBCommand):
+    def __init__(self, db_connection, username):
+        super().__init__(db_connection)
+        self.username = username
+
+    def execute(self):
+        self.cursor.execute('SELECT is_moderator FROM baseuser WHERE username = %s', (self.username,))
+        return bool(self.cursor.fetchone()[0])

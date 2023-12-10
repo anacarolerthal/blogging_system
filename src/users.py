@@ -24,8 +24,22 @@ class BaseUser(ABC):
     password: str
     email: str
 
-    # def set_user_id(self, user_id: int) -> None:
-    #     self.id = user_id
+    def set_id(self, user_id) -> None:
+        if type(user_id) != int:
+            raise TypeError("Tipo inválido de id. Ids devem ser inteiros.")
+        self.__id = user_id
+
+    def get_id(self) -> int:
+        """Get the id of the user"""
+        return self.__id
+
+    def get_username(self) -> str:
+        """Get the username of the user"""
+        return self.__username
+
+    def get_email(self) -> str:
+        """Get the email of the user"""
+        return self.__email
 
     # @abstractmethod
     # def register(self, username: str, password: str, email: str) -> None:
@@ -56,18 +70,6 @@ class User(BaseUser):
         self.__followers = followers if followers is not None else []
         self.__following = following if following is not None else []
 
-    def get_id(self) -> int:
-        """Get the id of the user"""
-        return self.__id
-
-    def get_username(self) -> str:
-        """Get the username of the user"""
-        return self.__username
-
-    def get_email(self) -> str:
-        """Get the email of the user"""
-        return self.__email
-
     def get_posts(self) -> List[int]:
         """Get the posts of the user"""
         return self.__posts
@@ -91,12 +93,6 @@ class User(BaseUser):
         id_self = self.get_id()
         liked_posts = BlogModel().get_all_liked_posts_by_user(id_self)
         return liked_posts
-
-    def set_id(self, user_id) -> None:
-        if type(user_id) != int:
-            raise TypeError("Tipo inválido de id. Ids devem ser inteiros.")
-        self.__id = user_id
-        pass
 
     def like(self, post_id: int) -> None:
         """Like a post"""
@@ -134,7 +130,6 @@ class User(BaseUser):
             id_self = self.get_id()
             BlogModel().follow(id_self, followee_id)
             listener.post_event("follow")
-            
 
     def unfollow(self, followee_id: int) -> None:
         """Unfollow a user"""
@@ -144,8 +139,6 @@ class User(BaseUser):
 
         if followee_id == self.get_id():
             raise CannotUnfollowSelf()
-        
-        print(self.get_following)
 
         if followee_id not in self.get_following():
             raise AlreadyNotFollowing()
@@ -158,46 +151,49 @@ class Moderator(BaseUser):
     """A moderator of the system"""
     def __init__(self,
                  username: str,
-                 password: str,
-                 email: str,
+                 password: str = None,
+                 email: str = None,
                  id: int = None):
         self.__id = id
         self.__username = username
         self.__password = password
         self.__email = email
 
-    def get_id(self) -> int:
-        """Get the id of the user"""
-        return self.__id
-
-    def get_username(self) -> str:
-        """Get the username of the user"""
-        return self.__username
-
-    def get_email(self) -> str:
-        """Get the email of the user"""
-        return self.__email
-
     def delete_post(self, post_id: int) -> None:
         """Delete a post"""
-        pass
+        if not BlogModel().check_if_post_in_db(post_id):
+            raise InvalidPostException()
+        else:
+            BlogModel().delete_post(post_id)
 
-    def ban_user(self, user_id: int) -> None:
+    def ban_user(self, banned_user_id: int) -> None:
         """Ban a user"""
-        pass
-      
-    def unban_user(self, user_id: int) -> None:
+        if not BlogModel().check_if_user_in_db(banned_user_id):
+            raise InvalidUserException()
+        elif BlogModel().check_if_user_is_banned(banned_user_id):
+            raise AlreadyBanned()
+        else:
+            BlogModel().ban_user(self.__id, banned_user_id)
+
+    def unban_user(self, unbanned_user_id: int) -> None:
         """Unban a user"""
-        pass
+        if not BlogModel().check_if_user_in_db(unbanned_user_id):
+            raise InvalidUserException()
+        elif not BlogModel().check_if_user_is_banned(unbanned_user_id):
+            raise AlreadyUnbanned()
+        else:
+            BlogModel().unban_user(self.__id, unbanned_user_id)
 
 class UserFactory:
     """Factory class for users"""
     @staticmethod
-    def create_user(type_: str) -> User:
+    def create_user(type_: str, username: str, id:int) -> BaseUser:
         """Create a user"""
         if type_ == 'USER':
-            return User()
+            return User(username,
+                             id)
         elif type_ == 'MODERATOR':
-            return Moderator()
+            return Moderator(username,
+                             id)
         else:
             raise ValueError(f'User type {type_} is not valid.')

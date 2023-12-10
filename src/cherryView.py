@@ -1,7 +1,7 @@
 import cherrypy
 from admin import Admin
 from content import Post, Reply
-from users import User
+from users import User, Moderator, UserFactory
 from tags import Tag
 from model import BlogModel
 from customExceptions import *
@@ -90,6 +90,35 @@ def post_to_html(posts, user=None, n_followers=None, n_following=None, logged_us
         </div>
     </body>
     '''
+    return base_html.replace('''</body>''', content)
+
+def moderator_post_to_html(posts):
+    content = """
+    <h1 style="text-align: center;">Bem-vindo ao Bloggster, moderador!</h1>
+    """
+    for post in posts:
+        # get author username
+        author_id = post.author_id
+        author_username = BlogModel().get_username_by_user_id(author_id)
+
+        content += f'''
+    <div class="blog-post">
+        <div class="blog-post-title">{post.title}</div>
+        <div class="blog-post-content">
+            <p>{post.content}</p>
+            <p>More content goes here...</p>
+        </div>
+        <div class="blog-post-meta">
+            <span>Author: <a href="users_page/{post.author_id}">{author_username}</a></span> |
+            <span>Date: {post.date}</span>
+            <span>Tags: {post.tags}</span>
+        </div>
+        <div class="blog-post-comments">
+            Veja os <a href="get_post_comments/postId={post.id}">comentários</a>
+        </div>
+    </div>
+</body>
+'''
     return base_html.replace('''</body>''', content)
 
 def new_post_to_html():
@@ -209,6 +238,7 @@ def register():
         <input type="text" name="username" placeholder="Username">
         <input type="password" name="password" placeholder="Password">
         <input type="email" name="email" placeholder="Email">
+        <input type="checkbox" name="is_moderator" value=True> Moderador?
         <input type="submit" value="Register">
     </form>
     <p style="text-align: center;">Já possui uma conta? Faça <a href="http://localhost:8080/">login</a>.</p>
@@ -280,8 +310,11 @@ class BlogView(object):
             tagged_posts.append(post)
         tagged_posts.reverse()
         self.posts = tagged_posts
-        return post_to_html(self.posts)
-
+        if self.is_moderator:
+            return moderator_post_to_html(self.posts)
+        elif not self.is_moderator:
+            return post_to_html(self.posts)
+    
     @cherrypy.expose
     def personal_page(self):
         if self.user_id is None:
@@ -413,11 +446,12 @@ class BlogView(object):
         admin = Admin()
         if admin.authenticate(username, password):
             # Authentication successful, render the main page
-            self.user = User(
-                username=username,
-                password=password
-            )
+            self.is_moderator = admin.is_moderator(username)
             user_id = self.model.get_user_id_by_username(username)
+            if self.is_moderator:
+                self.user = UserFactory().create_user("MODERATOR", username, user_id)
+            elif not admin.is_moderator(username):
+                self.user = UserFactory().create_user("USER", username, user_id)
             self.user.set_id(user_id)
             self.user_id = self.user.get_id()
             return self.main_page()
@@ -504,13 +538,18 @@ class BlogView(object):
         return json.dumps({'success': success, 'updated_button': updated_button})
 
     @cherrypy.expose
-    def is_registered(self, username=None, password=None, email=None):
+    def is_registered(self, username=None, password=None, email=None, is_moderator=None):
         '''
         Function that registers a user
         '''
         admin = Admin()
         if not admin.authenticate(username, password):
-            admin.register(username, password, email)
+            if is_moderator == "True":
+                is_moderator = True
+            else:
+                is_moderator = False
+            
+            admin.register(username, password, email, is_moderator)
             # redirect to login page
             return login() + '<p style="color: green; text-align: center;">Registrado com sucesso! Faça login.</p>'
         else:

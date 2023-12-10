@@ -2,8 +2,7 @@ import unittest
 import sys
 
 #APPENDS SRC FOLDER TO PATH
-sys.path.append('../')
-sys.path.append('../src')
+sys.path.append('./src')
 
 from users import User, Moderator
 from content import Post, Reply
