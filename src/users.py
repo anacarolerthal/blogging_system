@@ -99,22 +99,21 @@ class User(BaseUser):
         if not BlogModel().check_if_post_in_db(post_id):
             raise InvalidPostException()
 
-        if BlogModel().check_if_post_already_liked(self.get_id(), post_id):
+        elif BlogModel().check_if_post_already_liked(self.get_id(), post_id):
             raise AlreadyLiked()
 
-        BlogModel().like(self.get_id(), post_id)
-        pass
+        else:
+            BlogModel().like(self.get_id(), post_id)
 
     def unlike(self, post_id: int) -> None:
         """Unlike a post"""
         if not BlogModel().check_if_post_in_db(post_id):
             raise InvalidPostException()
 
-        if not BlogModel().check_if_post_already_liked(self.get_id(), post_id):
+        elif not BlogModel().check_if_post_already_liked(self.get_id(), post_id):
             raise AlreadyNotLiked()
-
-        BlogModel().unlike(self.get_id(), post_id)
-        pass
+        else:
+            BlogModel().unlike(self.get_id(), post_id)
 
 
     def follow(self, followee_id: int) -> None:
@@ -126,7 +125,6 @@ class User(BaseUser):
             raise CannotFollowSelf()
 
         elif followee_id in self.get_following():
-            print(True)
             raise AlreadyFollowing()
         else:
             id_self = self.get_id()

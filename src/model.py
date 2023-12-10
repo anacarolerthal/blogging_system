@@ -253,7 +253,7 @@ class BlogModel:
         command = CheckPostInDbCommand(self.connection, post_id)
         return self.execute_command(command)
 
-    def check_post_already_liked(self, user_id, post_id):
+    def check_if_post_already_liked(self, user_id, post_id):
         command = CheckPostAlreadyLiked(self.connection, user_id, post_id)
         return self.execute_command(command)
 

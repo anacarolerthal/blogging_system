@@ -32,9 +32,10 @@
         <div class="logo">Bloggster</div>
         <div class="navigation" style="text-align: center;">
             <a href="/main_page">Home</a> |
+            <a href="/tags_filter">Filtrar por Tag</a> |
             <a href="/new_post">Nova Postagem</a> |
-            <a href="/personal_page">Meu Perfil</a> |
-            <a href="/tags_filter">Tag search</a>
+            <a href="/personal_page">Meu Perfil</a>
+            <!-- <a href="/tags_filter">Tag search</a> -->
         </div>
     </div>
 </body>
@@ -53,7 +54,7 @@
                 data: {post_id: post_id},
                 dataType: 'json',
                 success: function(response) {
-                    console.log(response);
+                    //console.log(response);
                     if (response.success) {
                         $('#likeButton' + post_id).val(response.updated_button);
                     }
@@ -77,9 +78,11 @@
                 data: {user_id: user_id},
                 dataType: 'json',
                 success: function(response) {
-                    console.log(response);
+                    //console.log(response);
                     if (response.success) {
                         $('#followButton' + user_id).val(response.updated_button);
+                        // Redirecionar para a página do usuário
+                        window.location.href = response.user_url;
                     }
                 },
                 error: function(error) {
