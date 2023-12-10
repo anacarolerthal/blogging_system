@@ -512,7 +512,9 @@ class BlogView(object):
         reply, query_string = rf.createReplyWithPostID(self.user_id, post_id, content)
         reply.publish()
         return self.get_post_comments(query_string)
-    
+
+# ---------------------------------------------------    
+
     @cherrypy.expose
     def do_follow(self, user_id):
         try:
@@ -536,6 +538,7 @@ class BlogView(object):
             return self.users_page(int(user_id)) + '<p style="text-align: center;">Não é possível seguir a si mesmo.</p>'
         return json.dumps({'success': success, 'updated_button': updated_button})
 
+# ---------------------------------------------------
 
     @cherrypy.expose
     def get_post_comments(self, postId):
