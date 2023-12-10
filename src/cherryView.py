@@ -4,6 +4,7 @@ from content import Post, Reply
 from users import User
 from tags import Tag
 from model import BlogModel
+from customExceptions import *
 import utils
 import re
 import os
@@ -32,16 +33,24 @@ def post_to_html(posts, user=None, n_followers=None, n_following=None):
         <div class="user-info">
             <h2>@{user_name}</h2>
             <h3>Seguidores: {n_followers} | Seguindo: {n_following} |  <a href="/followers_page/{user_id}">Ver</a></h3>
+            <form method="post" action="/do_follow">
+                <input type="hidden" name="user_id" value={user.get_id()}>
+                <input type="submit" value="Seguir">
+            </form>
             <p>Deseja escrever uma <a href="http://localhost:8080/new_post">Nova Postagem</a>?</p>
         </div>
         '''
     else:
         content = """
         <h1 style="text-align: center;">Bem-vindo ao Bloggster!</h1>
-        <p style="text-align: center;">Deseja escrever uma <a href="http://localhost:8080/new_post">Nova Postagem</a>?</p>  
+        <p style="text-align: center;">Deseja escrever uma <a href="http://localhost:8080/new_post">Nova Postagem</a>?</p>
         """
 
     for post in posts:
+        # get author username
+        author_id = post.author_id
+        author_username = BlogModel().get_username_by_user_id(author_id)
+
         content += f'''
     <div class="blog-post">
         <div class="blog-post-title">{post.title}</div>
@@ -50,7 +59,7 @@ def post_to_html(posts, user=None, n_followers=None, n_following=None):
             <p>More content goes here...</p>
         </div>
         <div class="blog-post-meta">
-            <span>Author: <a href="users_page/{post.author_id}">{post.author_id}</a></span> |
+            <span>Author: <a href="users_page/{post.author_id}">{author_username}</a></span> |
             <span>Date: {post.date}</span>
             <span>Tags: {post.tags}</span>
         </div>
@@ -195,7 +204,6 @@ class BlogView(object):
         tagged_posts =[]
         for post in posts:
             tag_ids = self.model.get_tags_for_post(post.id)
-            print(tag_ids)
             # get tag names from tag ids
             tags = []
             for tag_id in tag_ids:
@@ -283,21 +291,16 @@ class BlogView(object):
         post_tags = []
         # for each word in tags, create a tag object and publish it
         for tag in tags.split():
-            print(tag)
             tg = Tag(tag_name=tag)
             tg.publish()
             post_tags.append(tag)
 
-        #print(post_tags)
-        
         post = Post(
             author_id=self.user_id,
             title=title,
             content=content,
             tags=post_tags
         )
-
-        print(post.tags)
 
         post.publish()
         return self.main_page()
@@ -341,6 +344,25 @@ class BlogView(object):
         query_string = "postId="+post_id
         id = reply.publish()
         return self.get_post_comments(query_string)
+    
+    @cherrypy.expose
+    def do_follow(self, user_id):
+        try:
+            self.user.follow(int(user_id))
+            # return to that user's page
+            return self.users_page(int(user_id))
+        except AlreadyFollowing as e:
+            # unfollow
+            self.user.unfollow(int(user_id))
+            return self.users_page(int(user_id))
+        except FollowInvalidUser as e:
+            # invalid user
+            return self.users_page(int(user_id))
+        except CannotFollowSelf as e:
+            # cannot follow self 
+            # add message to page
+            return self.users_page(int(user_id)) + '<p style="text-align: center;">Não é possível seguir a si mesmo.</p>'
+
 
     @cherrypy.expose
     def get_post_comments(self, postId):
