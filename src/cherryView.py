@@ -133,10 +133,12 @@ def comments_to_html(comments):
 
 def tag_search_html():
     content = '''
-    <h1 style="text-align: center;">Search by tag</h1>
+    <!-- <h1 style="text-align: center;">Search by tag</h1> -->
+    <h1 style="text-align: center;">Filtrar por tag</h1>
     <form method="post" action="tag_search_result">
         <input type="text" name="tag" placeholder="Tag">
-        <input type="submit" value="Search">
+        <!-- <input type="submit" value="Search"> -->
+        <input type="submit" value="Filtrar">
     </form>
     </body>
     '''
@@ -144,10 +146,12 @@ def tag_search_html():
 
 def tag_search_result_html(posts):
     content = '''
-    <h1 style="text-align: center;">Search by tag</h1>
+    <!-- <h1 style="text-align: center;">Search by tag</h1> -->
+    <h1 style="text-align: center;">Filtrar por tag</h1>
     <form method="post" action="tag_search_result">
         <input type="text" name="tag" placeholder="Tag">
-        <input type="submit" value="Search">
+        <!-- <input type="submit" value="Search"> -->
+        <input type="submit" value="Filtrar">
     </form>
     '''
     for post in posts:
