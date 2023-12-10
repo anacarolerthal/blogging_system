@@ -41,13 +41,11 @@ class AlreadyNotLiked(Exception):
     def __init__(self) -> None:
         super().__init__("Post já descurtido.")
 
-class InvalidPostId(Exception):
+class AlreadyBanned(Exception):
     def __init__(self) -> None:
-        super().__init__("Post não existe.")
+        super().__init__("Usuário já banido.")
 
-class InvalidUserId(Exception):
+class AlreadyUnbanned(Exception):
     def __init__(self) -> None:
-        super().__init__("Usuário não existe.")
-
-        
+        super().__init__("Usuário já desbanido.")
 

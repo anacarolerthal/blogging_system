@@ -181,7 +181,7 @@ class BlogModel:
         command = CreateReplyCommand(self.connection, reply)
         return self.execute_command(command)
     
-    def create_user(self, username, password, email):
+    def add_user(self, username, password, email):
         command = CreateUserCommand(self.connection, username, password, email)
         return self.execute_command(command)
     
@@ -245,11 +245,11 @@ class BlogModel:
         command = CheckUserCommand(self.connection, username, password)
         return self.execute_command(command)
 
-    def check_user_in_db(self, user_id):
+    def check_if_user_in_db(self, user_id):
         command = CheckUserInDBCommand(self.connection, user_id)
         return self.execute_command(command)
 
-    def check_post_in_db(self, post_id):
+    def check_if_post_in_db(self, post_id):
         command = CheckPostInDbCommand(self.connection, post_id)
         return self.execute_command(command)
 
@@ -282,5 +282,21 @@ class BlogModel:
         return self.execute_command(command)
     
     def get_user_by_id(self, id):
-        command = GetUserByUserId(self.connection, id)
+        command = GetUserByUserIdCommand(self.connection, id)
+        return self.execute_command(command)
+
+    def check_if_user_is_banned(self, id):
+        command = CheckIfUserIsBannedCommand(self.connection, id)
+        return self.execute_command(command)
+    
+    def ban_user(self, banner_id, banned_id):
+        command = BanUserCommand(self.connection, banner_id, banned_id)
+        return self.execute_command(command)
+    
+    def unban_user(self, banner_id, banned_id):
+        command = UnbanUserCommand(self.connection, banner_id, banned_id)
+        return self.execute_command(command)
+    
+    def delete_post(self, post_id):
+        command = DeletePostCommand(self.connection, post_id)
         return self.execute_command(command)
