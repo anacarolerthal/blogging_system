@@ -21,8 +21,8 @@ class Event():
             self.subscribers[event_type] = []
         self.subscribers[event_type].append(fn)
 
-    def post_event(self, event_type: str, data):
-        if not event_type in self.subscribe:
+    def post_event(self, event_type: str):
+        if not event_type in self.subscribers:
             return
         for fn in self.subscribers[event_type]:
-            fn(data)
+            fn()

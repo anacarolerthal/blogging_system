@@ -38,4 +38,56 @@
         </div>
     </div>
 </body>
+
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $(document).on('click', '.like-button', function(event) {
+            event.preventDefault();
+            var post_id = $(this).closest('form').data('post-id');
+
+            // Envie a requisição AJAX
+            $.ajax({
+                type: 'POST',
+                url: '/do_like',
+                data: {post_id: post_id},
+                dataType: 'json',
+                success: function(response) {
+                    console.log(response);
+                    if (response.success) {
+                        $('#likeButton' + post_id).val(response.updated_button);
+                    }
+                },
+                error: function(error) {
+                    console.error(error);
+                }
+            });
+        });
+    });
+
+    $(document).ready(function() {
+        $(document).on('click', '.follow-button', function(event) {
+            event.preventDefault();
+            var user_id = $(this).closest('form').data('user-id');
+
+            // Envie a requisição AJAX
+            $.ajax({
+                type: 'POST',
+                url: '/do_follow',
+                data: {user_id: user_id},
+                dataType: 'json',
+                success: function(response) {
+                    console.log(response);
+                    if (response.success) {
+                        $('#followButton' + user_id).val(response.updated_button);
+                    }
+                },
+                error: function(error) {
+                    console.error(error);
+                }
+            });
+        });
+    });
+</script>
+
 </html>

@@ -8,6 +8,7 @@ from customExceptions import *
 import utils
 import re
 import os
+import json
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 static_dir = os.path.join(current_dir, 'html')
@@ -24,20 +25,30 @@ with open(os.path.join(static_dir, 'base_html.html'), 'r') as f:
     base_html = f.read()
 
 
-def post_to_html(posts, user=None, n_followers=None, n_following=None):
+def post_to_html(posts, user=None, n_followers=None, n_following=None, logged_user=None):
     if user is not None and n_followers is not None and n_following is not None:
         user_id = user.get_id()
+        user_name = user.get_username()
         content = f'''
-        <div class="user-info">
-            <h2>@username</h2>
-            <h3>Seguidores: {n_followers} | Seguindo: {n_following} |  <a href="/followers_page/{user_id}">Ver</a></h3>
-            <form method="post" action="/do_follow">
-                <input type="hidden" name="user_id" value={user.get_id()}>
-                <input type="submit" value="Seguir">
-            </form>
-            <p>Deseja escrever uma <a href="http://localhost:8080/new_post">Nova Postagem</a>?</p>
-        </div>
-        '''
+            <div class="user-info">
+                <h2>@{user_name}</h2>
+                <h3>Seguidores: {n_followers} | Seguindo: {n_following} |  <a href="/followers_page/{user_id}">Ver</a></h3>
+                <p>Deseja escrever uma <a href="http://localhost:8080/new_post">Nova Postagem</a>?</p>
+            '''
+        if logged_user is not None:
+            if user_id in logged_user.get_following():
+                updated_button = "Deixar de Seguir"
+            else:
+                updated_button = "Seguir"
+            content += f'''
+                <form method="post" action="/do_follow" class="follow-form" id="follow-form" data-user-id="{user_id}">
+                    <input type="hidden" name="user_id" value={user_id}>
+                    <input type="submit" class="follow-button" id="followButton{user_id}" value="{updated_button}">
+                </form>
+            </div>
+            '''
+        else:
+            content += '</div>'
     else:
         content = """
         <h1 style="text-align: center;">Bem-vindo ao Bloggster!</h1>
@@ -67,9 +78,11 @@ def post_to_html(posts, user=None, n_followers=None, n_following=None):
                 <textarea type="text" id="content" name="content" placeholder="Comente sobre" rows="4" required></textarea>
                 <input type="submit" value="Comentar">
             </form>
-            <form method="post" action="do_like">
+        </div>
+        <div class="blog-post-likes">
+            <form method="post" action="do_like" class="like-form" id="like-form" data-post-id="{post.id}">
                 <input type="hidden" name="post_id" value={post.id}>
-                <input type="submit" value="Like">
+                <input type="submit" class="like-button" id="likeButton{post.id}" value="Like">
             </form>
         </div>
         <div class="blog-post-comments">
@@ -77,10 +90,8 @@ def post_to_html(posts, user=None, n_followers=None, n_following=None):
         </div>
     </div>
 </body>
-</html>
 '''
-    return base_html.replace('''</body>
-</html>''', content)
+    return base_html.replace('''</body>''', content)
 
 def new_post_to_html():
     # Renderiza a página para criar uma nova postagem
@@ -97,9 +108,9 @@ def new_post_to_html():
 
         <input type="submit" value="Postar">
     </form>
+    </body>
     """
-    return base_html.replace('''</body>
-</html>''', content)
+    return base_html.replace('''</body>''', content)
 
 def comments_to_html(comments):
     content = ''
@@ -115,13 +126,11 @@ def comments_to_html(comments):
             </div>
         </div>
     </body>
-    </html>
     '''
     content += '''<div class="back-button">
             <h2><a href="http://localhost:8080/main_page">← Voltar</a></h2>
         </div>'''
-    return base_html.replace('''</body>
-</html>''', content)
+    return base_html.replace('''</body>''', content)
 
 def tag_search_html():
     content = '''
@@ -188,10 +197,8 @@ def login():
     </form>
     <p style="text-align: center;">Se você ainda não tem uma conta, <a href="registering">registre-se</a>.</p>
     </body>
-</html>
     '''
-    return base_html.replace('''</body>
-</html>''', content)
+    return base_html.replace('''</body>''', content)
 
 def register():
     content = '''
@@ -204,16 +211,14 @@ def register():
     </form>
     <p style="text-align: center;">Já possui uma conta? Faça <a href="http://localhost:8080/">login</a>.</p>
     </body>
-</html>
     '''
-    return base_html.replace('''</body>
-</html>''', content)
+    return base_html.replace('''</body>''', content)
 
-def personal_page_html(user, posts):
+def personal_page_html(user, posts, logged_user=None):
     followers = user.get_followers()
     following = user.get_following()
 
-    return post_to_html(posts, user=user, n_followers=len(followers), n_following=len(following))
+    return post_to_html(posts, user=user, n_followers=len(followers), n_following=len(following), logged_user=logged_user)
 
 def followers_page_html(user, followers):
     content = f'''
@@ -242,10 +247,8 @@ def followers_page_html(user, followers):
         <h2><a href="http://localhost:8080/users_page/'''+str(user.get_id())+'''">← Voltar</a></h2>
     </div>
     </body>
-    </html>
         '''
-    return base_html.replace('''</body>
-</html>''', content)
+    return base_html.replace('''</body>''', content)
 
 
 class BlogView(object):
@@ -370,7 +373,7 @@ class BlogView(object):
             post.tags = tags
             tagged_user_posts.append(post)
         tagged_user_posts.reverse()
-        return personal_page_html(some_other_user, tagged_user_posts)
+        return personal_page_html(some_other_user, tagged_user_posts, self.user)
 
     @cherrypy.expose
     def new_post(self):
@@ -445,11 +448,15 @@ class BlogView(object):
         try:
             self.user.follow(int(user_id))
             # return to that user's page
-            return self.users_page(int(user_id))
+            #return self.users_page(int(user_id))
+            updated_button = "Deixar de Seguir"
+            success = True
         except AlreadyFollowing as e:
             # unfollow
+            #self.user.unfollow(int(user_id))
+            #return self.users_page(int(user_id))
             self.user.unfollow(int(user_id))
-            return self.users_page(int(user_id))
+            updated_button = "Seguir"
         except FollowInvalidUser as e:
             # invalid user
             return self.users_page(int(user_id))
@@ -457,6 +464,7 @@ class BlogView(object):
             # cannot follow self 
             # add message to page
             return self.users_page(int(user_id)) + '<p style="text-align: center;">Não é possível seguir a si mesmo.</p>'
+        return json.dumps({'success': success, 'updated_button': updated_button})
 
 
     @cherrypy.expose
@@ -476,12 +484,19 @@ class BlogView(object):
     def do_like(self, post_id):
         try:
             self.user.like(post_id)
-            return self.main_page().replace('''<input type="submit" value="Like">''',
-                                            '''<input type="submit" value="Unlike">''')
+            #return self.main_page().replace('''<input type="submit" value="Like">''','''<input type="submit" value="Unlike">''')
+            #updated_button = f'id="likeButton_{post_id}" value="Unlike"'
+            updated_button = "Unlike"
+            success = True
         except Exception as e:
             # dislike
             self.user.unlike(post_id)
-            return self.main_page()
+            #updated_button = f'id="likeButton_{post_id}" value="Like"'
+            #return self.main_page()
+            #return self.main_page().replace(f'id="likeButton_{post_id}" value="Like"', updated_button)
+            updated_button = "Like"
+            success = True
+        return json.dumps({'success': success, 'updated_button': updated_button})
 
     @cherrypy.expose
     def is_registered(self, username=None, password=None, email=None):
