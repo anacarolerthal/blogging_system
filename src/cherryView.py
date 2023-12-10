@@ -205,7 +205,6 @@ class BlogView(object):
         tagged_posts =[]
         for post in posts:
             tag_ids = self.model.get_tags_for_post(post.id)
-            print(tag_ids)
             # get tag names from tag ids
             tags = []
             for tag_id in tag_ids:
@@ -349,7 +348,6 @@ class BlogView(object):
             return self.users_page(int(user_id))
         except AlreadyFollowing as e:
             # unfollow
-            print("exception")
             self.user.unfollow(int(user_id))
             return self.users_page(int(user_id))
         except FollowInvalidUser as e:
@@ -359,7 +357,6 @@ class BlogView(object):
             # cannot follow self 
             # add message to page
             return self.users_page(int(user_id)) + '<p style="text-align: center;">Não é possível seguir a si mesmo.</p>'
-
 
 
     @cherrypy.expose
