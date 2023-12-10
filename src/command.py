@@ -287,3 +287,13 @@ class GetPostByPostIdCommand(DBCommand):
     def execute(self):
         self.cursor.execute('SELECT * FROM post WHERE id = %s', (self.post_id,))
         return self.cursor.fetchone()
+    
+class GetUserByUserId(DBCommand):
+    def __init__(self, db_connection, id):
+        super().__init__(db_connection)
+        self.id = id
+
+    def execute(self):
+        self.cursor.execute('SELECT * FROM baseuser WHERE id = %s', (self.id, ))
+        return self.cursor.fetchone()[0]
+

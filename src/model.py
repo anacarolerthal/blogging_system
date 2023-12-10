@@ -276,3 +276,7 @@ class BlogModel:
     def get_post_by_post_id(self, post_id):
         command = GetPostByPostIdCommand(self.connection, post_id)
         return self.execute_command(command)
+    
+    def get_user_by_id(self, id):
+        command = GetUserByUserId(self.connection, id)
+        return self.execute_command(command)
