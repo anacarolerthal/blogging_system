@@ -149,6 +149,12 @@ def moderator_post_to_html(posts, user=None):
             <span>Date: {post.date}</span>
             <span>Tags: {post.tags}</span>
         </div>
+        <div class="blog-post-delete">
+            <form method="post" action="delete_post" class="delete-post-form">
+                <input type="hidden" name="post_id" value={post.id}>
+                <input type="submit" value="Delete">
+            </form>
+        </div>
         <div class="blog-post-comments">
             Veja os <a href="get_post_comments/postId={post.id}">comentários</a>
         </div>
@@ -597,6 +603,15 @@ class BlogView(object):
             updated_button = "Like"
             success = True
         return json.dumps({'success': success, 'updated_button': updated_button})
+    
+    @cherrypy.expose
+    def delete_post(self, post_id):
+        try:
+            self.user.delete_post(post_id)
+            return self.main_page()
+        except InvalidPostException as e:
+            # invalid post
+            return self.main_page() + '<p style="text-align: center;">Post inválido.</p>'
 
     @cherrypy.expose
     def is_registered(self, username=None, password=None, email=None, is_moderator=None):
@@ -609,7 +624,7 @@ class BlogView(object):
                 is_moderator = True
             else:
                 is_moderator = False
-            
+
             admin.register(username, password, email, is_moderator)
             # redirect to login page
             return login() + '<p style="color: green; text-align: center;">Registrado com sucesso! Faça login.</p>'
