@@ -257,50 +257,74 @@ class BlogView(object):
     def index(self):
         return login()
 
+    # OLD VERSION OF main_page
+    # @cherrypy.expose
+    # def main_page(self):
+    #     posts = [utils.transformPostDataToObject(post) for post in self.model.get_all_posts()]
+    #     # get post tags
+    #     tagged_posts =[]
+    #     for post in posts:
+    #         tag_ids = self.model.get_tags_for_post(post.id)
+    #         # get tag names from tag ids
+    #         tags = []
+    #         for tag_id in tag_ids:
+    #             if tag_id is not None:
+    #                 tags.append(self.model.get_tag_name_by_id(tag_id))
+    #         # add tags to post
+    #         post.tags = tags
+    #         tagged_posts.append(post)
+    #     tagged_posts.reverse()
+    #     self.posts = tagged_posts
+    #     return post_to_html(self.posts)
+
+    # REFACTORED VERSION OF main_page
     @cherrypy.expose
     def main_page(self):
-        posts = [utils.transformPostDataToObject(post) for post in self.model.get_all_posts()]
-        # get post tags
-        tagged_posts =[]
-        for post in posts:
-            tag_ids = self.model.get_tags_for_post(post.id)
-            # get tag names from tag ids
-            tags = []
-            for tag_id in tag_ids:
-                if tag_id is not None:
-                    tags.append(self.model.get_tag_name_by_id(tag_id))
-            # add tags to post
-            post.tags = tags
-            tagged_posts.append(post)
-        tagged_posts.reverse()
+        tagged_posts = utils.getTaggedPosts(self.model)
         self.posts = tagged_posts
-        return post_to_html(self.posts)
+        return post_to_html(self.posts, self.user)
 
+    # OLD VERSION OF personal_page
+    # @cherrypy.expose
+    # def personal_page(self):
+    #     if self.user_id is None:
+    #         return login()
+    #     # get user posts
+    #     user_posts = [utils.transformPostDataToObject(post) for post in self.model.get_posts_for_user(self.user_id)]
+    #     tagged_user_posts =[]
+    #     # get post tags
+    #     for post in user_posts:
+    #         tag_ids = self.model.get_tags_for_post(post.id)
+    #         # get tag names from tag ids
+    #         tags = []
+    #         for tag_id in tag_ids:
+    #             if tag_id is not None:
+    #                 tags.append(self.model.get_tag_name_by_id(tag_id))
+    #         # add tags to post
+    #         post.tags = tags
+    #         tagged_user_posts.append(post)
+    #     tagged_user_posts.reverse()
+        
+    #     # if user has no posts, display a message
+    #     if len(tagged_user_posts) == 0:
+    #         return personal_page_html(self.user, tagged_user_posts) + '<p style="text-align: center;">Você ainda não tem nenhuma postagem. Clique em <a href="http://localhost:8080/new_post">"Nova Postagem"</a> para começar a blogar!</p>'
+    #     return personal_page_html(self.user, tagged_user_posts)
+
+    # REFACTORED VERSION OF personal_page
     @cherrypy.expose
     def personal_page(self):
         if self.user_id is None:
             return login()
+        
         # get user posts
-        user_posts = [utils.transformPostDataToObject(post) for post in self.model.get_posts_for_user(self.user_id)]
-        tagged_user_posts =[]
-        # get post tags
-        for post in user_posts:
-            tag_ids = self.model.get_tags_for_post(post.id)
-            # get tag names from tag ids
-            tags = []
-            for tag_id in tag_ids:
-                if tag_id is not None:
-                    tags.append(self.model.get_tag_name_by_id(tag_id))
-            # add tags to post
-            post.tags = tags
-            tagged_user_posts.append(post)
-        tagged_user_posts.reverse()
+        user_posts = utils.getTaggedPosts(self.model, self.user_id)
         
         # if user has no posts, display a message
-        if len(tagged_user_posts) == 0:
-            return personal_page_html(self.user, tagged_user_posts) + '<p style="text-align: center;">Você ainda não tem nenhuma postagem. Clique em <a href="http://localhost:8080/new_post">"Nova Postagem"</a> para começar a blogar!</p>'
-        return personal_page_html(self.user, tagged_user_posts)
-
+        if len(user_posts) == 0:
+            return personal_page_html(self.user, user_posts) + '<p style="text-align: center;">Você ainda não tem nenhuma postagem. Clique em <a href="http://localhost:8080/new_post">"Nova Postagem"</a> para começar a blogar!</p>'
+        
+        return personal_page_html(self.user, user_posts, self.user)
+        
     @cherrypy.expose
     def tags_filter(self):
         return tag_search_html()
