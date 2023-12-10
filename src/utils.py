@@ -1,4 +1,5 @@
 from content import Post, Reply
+from users import User
 
 def transformPostDataToObject(db_data: tuple) -> Post:
     post = Post(
@@ -21,6 +22,18 @@ def transformReplyDataToObject(db_data: tuple) -> Reply:
         image=db_data[4]
     )
     return reply
+    
+def transformUserDataToObject(db_data: tuple) -> User:
+    user = User(
+        id = db_data[0],
+        username=db_data[1],
+        password=db_data[5],
+        email = db_data[2],
+        posts=None,
+        followers=None,
+        following=None
+    )
+    return user
     
 
     

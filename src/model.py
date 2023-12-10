@@ -75,6 +75,10 @@ class BlogModel:
     def get_user_id_by_username(self, username):
         self.cursor.execute('SELECT id FROM baseuser WHERE username = %s', (username, ))
         return int(self.cursor.fetchone()[0])
+    
+    def get_user_by_id(self, id):
+        self.cursor.execute('SELECT * FROM baseuser WHERE id = %s', (id, ))
+        return self.cursor.fetchone()[0]
 
     def get_username_by_user_id(self, user_id):
         self.cursor.execute('SELECT username FROM baseuser WHERE id = %s', (user_id, ))
