@@ -38,6 +38,10 @@ def post_to_html(posts, user=None, n_followers=None, n_following=None):
         """
 
     for post in posts:
+        # get author username
+        author_id = post.author_id
+        author_username = BlogModel().get_username_by_user_id(author_id)
+
         content += f'''
     <div class="blog-post">
         <div class="blog-post-title">{post.title}</div>
@@ -46,7 +50,7 @@ def post_to_html(posts, user=None, n_followers=None, n_following=None):
             <p>More content goes here...</p>
         </div>
         <div class="blog-post-meta">
-            <span>Author: <a href="users_page/{post.author_id}">{post.author_id}</a></span> |
+            <span>Author: <a href="users_page/{post.author_id}">{author_username}</a></span> |
             <span>Date: {post.date}</span>
             <span>Tags: {post.tags}</span>
         </div>

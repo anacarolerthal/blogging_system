@@ -78,7 +78,7 @@ class BlogModel:
 
     def get_username_by_user_id(self, user_id):
         self.cursor.execute('SELECT username FROM baseuser WHERE id = %s', (user_id, ))
-        return self.cursor.fetchone()[0]
+        return self.cursor.fetchone()
 
     def add_user(self, username, password, email):
         self.cursor.execute('INSERT INTO baseuser (username, passw, email, is_moderator) VALUES (%s, %s, %s, %s) RETURNING id', (username, password, email, False))
