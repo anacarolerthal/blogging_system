@@ -158,8 +158,8 @@ class Moderator(BaseUser):
     """A moderator of the system"""
     def __init__(self,
                  username: str,
-                 password: str,
-                 email: str,
+                 password: str = None,
+                 email: str = None,
                  id: int = None):
         self.__id = id
         self.__username = username
@@ -212,11 +212,13 @@ class Moderator(BaseUser):
 class UserFactory:
     """Factory class for users"""
     @staticmethod
-    def create_user(type_: str) -> User:
+    def create_user(type_: str, username: str, id:int) -> BaseUser:
         """Create a user"""
         if type_ == 'USER':
-            return User()
+            return User(username,
+                             id)
         elif type_ == 'MODERATOR':
-            return Moderator()
+            return Moderator(username,
+                             id)
         else:
             raise ValueError(f'User type {type_} is not valid.')
