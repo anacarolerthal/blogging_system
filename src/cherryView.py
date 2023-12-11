@@ -279,7 +279,8 @@ def register():
         <input type="text" name="username" placeholder="Username">
         <input type="password" name="password" placeholder="Password">
         <input type="email" name="email" placeholder="Email">
-        <input type="checkbox" name="is_moderator" value=True> Moderador?
+        <label for="is_moderator">Moderador?</label>
+        <input type="checkbox" name="is_moderator" value="True">
         <input type="submit" value="Register">
     </form>
     <p style="text-align: center;">Já possui uma conta? Faça <a href="http://localhost:8080/">login</a>.</p>

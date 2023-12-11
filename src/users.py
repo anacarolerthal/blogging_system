@@ -172,11 +172,13 @@ class Moderator(BaseUser):
                  username: str,
                  password: str = None,
                  email: str = None,
-                 id: int = None):
+                 id: int = None,
+                 state: UserLoginState = LoggedInState()):
         self.id = id
         self.username = username
         self.password = password
         self.email = email
+        self.__login_state = state
 
     def delete_post(self, post_id: int) -> None:
         """Delete a post"""
@@ -206,6 +208,16 @@ class Moderator(BaseUser):
             raise AlreadyUnbanned()
         else:
             BlogModel().unban_user(self.id, unbanned_user_id)
+
+    def is_logged_in(self) -> bool:
+        return self.__login_state.is_logged_in()
+
+    def login(self) -> None:
+        self.__login_state = LoggedInState()
+
+    def logout(self) -> None:
+        self.__login_state = LoggedOutState()
+    
 
 class UserFactory:
     """Factory class for users"""
