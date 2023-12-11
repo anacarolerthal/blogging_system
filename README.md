@@ -90,7 +90,7 @@ Esse padrão foi utilizado para gerenciar a sessão do usuário na aplicação. 
 ## Run
 Para rodar a aplicação, deve-se rodar o comando
 ```
-python3 src/controller.py
+python src/controller.py
 ```
 
 
@@ -98,6 +98,13 @@ python3 src/controller.py
 
 Para esta aplicação foram feitos testes unitários e testes de integração (especificamente, de integração com o banco de dados).
 Para os de integração, foi setado a conexão para um banco de dados local afim de simular um *mock*.
-Os testes podem ser encontrados no folder `tests`.
+Os testes podem ser encontrados no folder `tests` e podem ser rodados primeiramente entrando na pasta `tests`
+```
+cd tests
+```
+e depois, rodando
+```
+python <arquivo_de_teste.py>
+```
 
 ### Relatório de Cobertura
