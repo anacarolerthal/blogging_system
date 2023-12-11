@@ -1,8 +1,6 @@
 import model
-import cherryView
-import content
+import blog
 import cherrypy
-import utils
 
 class BlogController:
     def __init__(self, model, view_model):
@@ -36,5 +34,5 @@ class BlogController:
 
 if __name__ == '__main__':
     db = model.BlogModel()
-    controller = BlogController(db, cherryView.BlogView())
+    controller = BlogController(db, blog.Blog())
     controller.start()
