@@ -553,6 +553,9 @@ class BlogView(object):
         post.publish()
         return self.main_page()
 
+# -----------------------------------------------------------------------
+
+    #OLD VERSION OF is_authenticated
     @cherrypy.expose
     def is_authenticated(self, username=None, password=None):
         '''
@@ -575,7 +578,12 @@ class BlogView(object):
             error_message = "Invalid username or password. Please try again."
             login_form = login() + f'<p style="color: red; text-align:center;">{error_message}</p>'
             return login_form
-
+        
+    # REFACTORED VERSION OF is_authenticated
+    # ...
+    
+# -----------------------------------------------------------------------
+    
     @cherrypy.expose
     def registering(self):
         '''
@@ -583,15 +591,22 @@ class BlogView(object):
         '''
         return register()
 
+    # @cherrypy.expose
+    # def do_comment(self, content, post_id):
+    #     reply = Reply(
+    #         author_id=self.user_id,
+    #         content=content,
+    #         parent_post_id=post_id
+    #     )
+    #     query_string = "postId="+post_id
+    #     id = reply.publish()
+    #     return self.get_post_comments(query_string)
+    
+    # REFACTORED VERSION OF do_comment
     @cherrypy.expose
     def do_comment(self, content, post_id):
-        reply = Reply(
-            author_id=self.user_id,
-            content=content,
-            parent_post_id=post_id
-        )
-        query_string = "postId="+post_id
-        id = reply.publish()
+        reply, query_string = rf.createReplyWithPostID(self.user_id, post_id, content)
+        reply.publish()
         return self.get_post_comments(query_string)
 
     @cherrypy.expose
