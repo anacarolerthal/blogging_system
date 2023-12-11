@@ -9,17 +9,40 @@ Sistema de blogs e publicação de conteúdo desenvolvido para a disciplina de E
 
 ## Planejamento, Análise e Design do Sistema
 
-A etapa de planejamento, análise e design do sistema encontra-se escrita no documento [Metáfora de sistema, estórias de usuário e casos de uso](https://github.com/anacarolerthal/blogging_system/blob/main/initial-project.pdf).
+A etapa de planejamento, análise e design do sistema encontra-se escrita abaixo.
 
-### Casos de Uso
+### Diagram de caso de uso
 
-### Histórias de usuário
+Na seção abaixo, apresentamos os documentos referente ao planejamento da sistema. 
+> Reiteramos que a entrega da A1 foi refeita.
+
+![Caso de Uso da A2](./docs/use-cases/case-use-a1.jpeg)
+
+### Caos de Uso e Histórias de usuário
+
+Os casos de uso e as histórias de usuário encontram-se [nesse documento](docs/planejamento-sistema.pdf).
 
 ### Diagrama de classes
 
-### Diagrama de pacotes
 
-### Diagrama de sequência
+### Diagramas de Sequência
+
+Os diagramas de sequência para as principais funcionalidades estão presentes no folder [sequences-diagram](./docs/sequences-diagram/). Abaixo, também apresentamos as imagens.
+
+#### Criar um post
+![sequencia-diagram](./docs/sequences-diagram/create_new_post.png)
+
+#### Curtir um post
+![sequencia-diagram](./docs/sequences-diagram/like_post.png)
+
+#### Seguir um usuário
+![sequencia-diagram](./docs/sequences-diagram/follow_user.png)
+
+#### Criar um comentário
+![sequencia-diagram](./docs/sequences-diagram/create_new_comment.png)
+
+#### Filtrar por Tag
+![sequencia-diagram](./docs/sequences-diagram/filter_by_tag.png)
 
 ## Desenvolvimento
 
@@ -38,7 +61,6 @@ O banco de dados utilizado foi um PostgreSQL as a Service, o [ElephantSQL](https
 Para este projeto, foram utilizados 6 padrões de projeto: Observer, Command, Singleton, Decorator, Factory e State.
 
 #### Observer
-
 Para notificar um usuário quando este é seguido, foi utilizado o padrão Observer. Para isso, no módulo `event.py` foi criado a classe de eventos que estão inscritos nesse padrão, assim como suas funções (o que deve acontecer ao esse evento ocorrer). No módulo `followListener.py` estão as configurações do nosso evento (imagem 2) e a implementação da nossa função. Por fim, no módulo onde acontece a ação de *follow*, `users.py`, foi feita a configuração inicial e, na função de *follow*, foi adicionado o trigger para o disparo do evento.
 ![Observer Pattern](./docs/observer.png)
 
@@ -50,17 +72,20 @@ Esse padrão foi utilizado para as queries no banco de dados. Para isso, cada qu
 
 
 #### Singleton e Decorator
-Para assegurar que todas conexões com o banco utilizadas na aplicação são as mesmas, utilizamos o padrão Singleton.
+Para assegurar que todas conexões com o banco utilizadas na aplicação são as mesmas, utilizamos o padrão Singleton. Junto com ele, utilizamos a *sugar syntax* do Python para o design do decorator - isto é, um decorador para modificar o comportamento da classe `DBConnection`.
 
-![Singleton Pattern](./docs/singleton-decorator.png)
+![Singleton Pattern](./docs/singleton_decorator.png)
 
 #### Factory
-No momento do login, é verificado se o usuário é um moderador ou um usuário normal. Esse padrão foi utilizado para a criação dos nossos dois tipos de usuário após essa verificação: User (usuário normal da aplicação) e Moderator (moderador com atribuições a mais). 
+No momento do login, é verificado se o usuário é um moderador ou um usuário normal. O padrão Factory foi utilizado para a criação dos nossos dois tipos de usuário após essa verificação: User (usuário normal da aplicação) e Moderator (moderador com atribuições a mais). 
 ![Factory Pattern](./docs/factory.png)
 
 Como são apenas 2 usuários, nesse primeiro momento não parece haver tanto sentido em utilizá-lo. Entretanto, pensando em manutenabilidade da aplicação, caso no futuro sejam criados novos tipos de usuário (criador de conteúdo, empresa, etc), esse padrão já esta aplicado para facilitar.
 
 #### State
+Esse padrão foi utilizado para gerenciar a sessão do usuário na aplicação. O modulo `state.py` implementa a classe abstrata dos states (figura 1).  Na classe referente ao usuário (2), foram implementadas a propriedade e os métodos referente ao padrão do projeto. Por fim, na funcão de autenticação, foi mudado o seu estado de padrão (deslogado) para logado após o login e para acessar as outras páginas da aplicação (4) é verificado se este está sempre logado. Além disso, ao clicar em Logout, então seu estado é mudado também.
+
+![Factory Pattern](./docs/state.png)
 
 ## Run
 Para rodar a aplicação, deve-se rodar o comando
@@ -69,7 +94,7 @@ python3 src/controller.py
 ```
 
 
-## Teste
+## Teste e Qualidade de Software
 
 Para esta aplicação foram feitos testes unitários e testes de integração (especificamente, de integração com o banco de dados).
 Para os de integração, foi setado a conexão para um banco de dados local afim de simular um *mock*.
