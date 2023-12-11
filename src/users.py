@@ -6,6 +6,7 @@ from model import BlogModel
 from customExceptions import *
 from followListener import setup_follow_event
 from event import Event
+from state import UserLoginState, LoggedInState, LoggedOutState
 
 listener = Event()
 setup_follow_event(listener)
@@ -62,7 +63,8 @@ class User(BaseUser):
                  id: int = None,
                  posts: List[int] = None, 
                  followers: List[int] = None,
-                 following: List[int] = None):
+                 following: List[int] = None,
+                 state: UserLoginState = LoggedInState()):
         self.id = id
         self.username = username
         self.password = password
@@ -70,6 +72,16 @@ class User(BaseUser):
         self.__posts = posts if posts is not None else []
         self.__followers = followers if followers is not None else []
         self.__following = following if following is not None else []
+        self.__login_state = state
+
+    def is_logged_in(self) -> bool:
+        return self.__login_state.is_logged_in()
+
+    def login(self) -> None:
+        self.__login_state = LoggedInState()
+
+    def logout(self) -> None:
+        self.__login_state = LoggedOutState()
 
     def get_posts(self) -> List[int]:
         """Get the posts of the user"""
@@ -79,14 +91,20 @@ class User(BaseUser):
         """Get the followers of the user"""
         id_self = self.get_id()
         follower_list = BlogModel().get_followers_user(id_self)
-        self.__followers = [user for user in follower_list]
+        followers = []
+        for user_id in follower_list:
+            followers.append(BlogModel().get_username_by_user_id(user_id))
+        self.__followers = followers
         return self.__followers
 
     def get_following(self) -> List[int]:
         """Get the following of the user"""
         id_self = self.get_id()
         following_list = BlogModel().get_following_user(id_self)
-        self.__following = [user for user in following_list]
+        following = []
+        for user_id in following_list:
+            following.append(BlogModel().get_username_by_user_id(user_id))
+        self.__following = following
         return self.__following
 
     def get_liked_posts(self) -> List[int]:
