@@ -10,7 +10,6 @@ class BaseContent(ABC):
     author_id: int
     date: str
     content: str
-    image: str
 
     # REFACTORING
     # using BaseContent as a base class for Post and Reply, 
@@ -55,14 +54,12 @@ class Post(BaseContent):
                  id: int = None,
                  date: str = None,
                  content: str = None,
-                 image: str = None,
                  tags: List[str] = None):
         self.id = id
         self.author_id = author_id
         self.date = date
         self.title = title
         self.content = content
-        self.image = image
         self.tags = tags if tags is not None else []
 
     # OLD VERSION
@@ -81,9 +78,6 @@ class Post(BaseContent):
     def get_title(self) -> str:
         return self.title
 
-    def get_image(self) -> str:
-        return self.image
-
     def get_tags(self) -> List[str]:
         return self.tags
 
@@ -92,7 +86,6 @@ class Post(BaseContent):
             tg = Tag(tag)
             tg.publish()
             tag_id = BlogModel().get_tag_id_by_name(tg.get_tag_name())
-            # BlogModel().create_tagged_post(self.id, tg.get_tag_id())
             BlogModel().create_tagged_post(self.id, tag_id)
 
     def publish(self):
@@ -115,26 +108,18 @@ class Reply(BaseContent):
                  id: int = None,
                  date: str = None,
                  content: str = None,
-                 image: str = None,
                  tags: List[str] = None):
         self.id = None
         self.author_id = author_id
         self.date = date
         self.parent_post_id = parent_post_id
         self.content = content
-        self.image = image
 
     def get_parent_post(self) -> int:
         return self.parent_post_id
 
-    def get_image(self) -> str:
-        return self.image
-
     def publish(self) -> None:
         return BlogModel().create_reply(self)
-
-    def delete(self) -> None:
-        return super().delete()
 
     def render(self) -> str:
         display = f"""
