@@ -91,14 +91,20 @@ class User(BaseUser):
         """Get the followers of the user"""
         id_self = self.get_id()
         follower_list = BlogModel().get_followers_user(id_self)
-        self.__followers = [user for user in follower_list]
+        followers = []
+        for user_id in follower_list:
+            followers.append(BlogModel().get_username_by_user_id(user_id))
+        self.__followers = followers
         return self.__followers
 
     def get_following(self) -> List[int]:
         """Get the following of the user"""
         id_self = self.get_id()
         following_list = BlogModel().get_following_user(id_self)
-        self.__following = [user for user in following_list]
+        following = []
+        for user_id in following_list:
+            following.append(BlogModel().get_username_by_user_id(user_id))
+        self.__following = following
         return self.__following
 
     def get_liked_posts(self) -> List[int]:
