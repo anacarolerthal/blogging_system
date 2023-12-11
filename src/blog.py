@@ -329,7 +329,7 @@ def followers_page_html(user, followers):
     return base_html.replace('''</body>''', content)
 
 
-class BlogView(object):
+class Blog(object):
     def __init__(self):
         self.posts = []
         self.model = BlogModel()

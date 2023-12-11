@@ -14,7 +14,7 @@ A etapa de planejamento, análise e design do sistema encontra-se escrita abaixo
 ### Diagram de caso de uso
 
 Na seção abaixo, apresentamos os documentos referente ao planejamento da sistema. 
-> Reiteramos que a entrega da A1 foi refeita.
+> Reiteramos que a entrega da A1 foi refeita. A entrega da A1 pode ser encontrada [initial-project.pdf](initial-project.pdf).
 
 ![Caso de Uso da A2](./docs/use-cases/case-use-a1.jpeg)
 
@@ -23,7 +23,7 @@ Na seção abaixo, apresentamos os documentos referente ao planejamento da siste
 Os casos de uso e as histórias de usuário encontram-se [nesse documento](docs/planejamento-sistema.pdf).
 
 ### Diagrama de classes
-
+![class-diagram](./docs/class-diagram.jpeg)
 
 ### Diagramas de Sequência
 
@@ -44,10 +44,12 @@ Os diagramas de sequência para as principais funcionalidades estão presentes n
 #### Filtrar por Tag
 ![sequencia-diagram](./docs/sequences-diagram/filter_by_tag.png)
 
+## Diagrama de pacotes
+
 ## Desenvolvimento
 
 ### Demo
-Um vídeo demo da aplicação funcionando pode ser encontrado [aqui](url_para_o_video.).
+Os vídeos demo da aplicação funcionando podem ser encontrado [aqui](url_para_o_video_usuario) (escopo usuário) e [aqui](url_para_o_video_usuario_2) escopo moderador.
 
 ### Interface
 A biblioteca utilizada foi o [CherryPy](https://docs.cherrypy.dev/en/latest/), um framework da web usado para criar aplicativos da web. Sua escolha foi devido a facilidade de mapear URL`s a funções.
@@ -106,5 +108,3 @@ e depois, rodando
 ```
 python <arquivo_de_teste.py>
 ```
-
-### Relatório de Cobertura
