@@ -1,13 +1,9 @@
 import cherrypy
 from admin import Admin
-from content import Post, Reply
-from users import User, Moderator, UserFactory
-from tags import Tag
+from users import UserFactory
 from model import BlogModel
 from customExceptions import *
 import refacFunctions as rf
-import utils
-import re
 import os
 import json
 
@@ -553,8 +549,6 @@ class BlogView(object):
         post.publish()
         return self.main_page()
 
-# -----------------------------------------------------------------------
-
     #OLD VERSION OF is_authenticated
     @cherrypy.expose
     def is_authenticated(self, username=None, password=None):
@@ -578,11 +572,6 @@ class BlogView(object):
             error_message = "Invalid username or password. Please try again."
             login_form = login() + f'<p style="color: red; text-align:center;">{error_message}</p>'
             return login_form
-        
-    # REFACTORED VERSION OF is_authenticated
-    # ...
-    
-# -----------------------------------------------------------------------
     
     @cherrypy.expose
     def registering(self):

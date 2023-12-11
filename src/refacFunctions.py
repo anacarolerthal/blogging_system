@@ -2,6 +2,7 @@ from utils import *
 from model import BlogModel
 from users import UserFactory
 from tags import Tag
+from admin import Admin
 import re
 
 def getTaggedPosts(model: BlogModel, user_id: int = None) -> list:
