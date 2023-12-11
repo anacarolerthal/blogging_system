@@ -17,8 +17,8 @@ class CreatePostCommand(DBCommand):
         self.post = post
 
     def execute(self):
-        self.cursor.execute('INSERT INTO Post (author_id, title, text_content, image) VALUES (%s, %s, %s, %s) RETURNING id',
-                       (self.post.author_id, self.post.title, self.post.content, self.post.image))
+        self.cursor.execute('INSERT INTO Post (author_id, title, text_content) VALUES (%s, %s, %s) RETURNING id',
+                       (self.post.author_id, self.post.title, self.post.content))
         id = self.cursor.fetchone()[0]
         self.connection.commit()
         return id
@@ -39,8 +39,8 @@ class CreateReplyCommand(DBCommand):
         self.reply = reply
 
     def execute(self):
-        self.cursor.execute('INSERT INTO Reply (author_id, text_content, image, parent_post_id) VALUES (%s, %s, %s, %s) RETURNING id', 
-                            (self.reply.author_id, self.reply.content, self.reply.image, self.reply.parent_post_id))
+        self.cursor.execute('INSERT INTO Reply (author_id, text_content, parent_post_id) VALUES (%s, %s, %s) RETURNING id', 
+                            (self.reply.author_id, self.reply.content, self.reply.parent_post_id))
         id = self.cursor.fetchone()[0]
         self.connection.commit()
         return id
