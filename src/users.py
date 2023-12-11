@@ -218,7 +218,6 @@ class User(BaseUser):
 
         id_self = self.get_id()
         BlogModel().unfollow(id_self, followee_id)
-        pass
 
 class Moderator(BaseUser):
     """A moderator of the system
