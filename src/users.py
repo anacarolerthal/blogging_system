@@ -209,10 +209,11 @@ class User(BaseUser):
         if not BlogModel().check_if_user_in_db(followee_id):
             raise InvalidUserException()
 
-        if followee_id == self.get_id():
+        elif followee_id == self.get_id():
             raise CannotUnfollowSelf()
 
-        if followee_id not in self.get_following():
+        else:
+            followee_id not in self.get_following()
             raise AlreadyNotFollowing()
 
         id_self = self.get_id()
