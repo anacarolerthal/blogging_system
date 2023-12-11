@@ -591,6 +591,7 @@ class BlogView(object):
         '''
         return register()
 
+    # OLD VERSION OF do_reply
     # @cherrypy.expose
     # def do_comment(self, content, post_id):
     #     reply = Reply(
@@ -613,26 +614,26 @@ class BlogView(object):
     def do_follow(self, user_id):
         try:
             self.user.follow(int(user_id))
-            # return to that user's page
-            #return self.users_page(int(user_id))
             updated_button = "Deixar de Seguir"
             success = True
             user_url = f'/users_page/{user_id}'
+        
         except AlreadyFollowing as e:
             # unfollow
-            #self.user.unfollow(int(user_id))
-            #return self.users_page(int(user_id))
             self.user.unfollow(int(user_id))
             updated_button = "Seguir"
             success = True
             user_url = f'/users_page/{user_id}'
+        
         except FollowInvalidUser as e:
             # invalid user
             return self.users_page(int(user_id))
+        
         except CannotFollowSelf as e:
             # cannot follow self 
             # add message to page
             return self.users_page(int(user_id)) + '<p style="text-align: center;">Não é possível seguir a si mesmo.</p>'
+        
         return json.dumps({'success': success, 'updated_button': updated_button, 'user_url': user_url})
     
     @cherrypy.expose
@@ -643,26 +644,40 @@ class BlogView(object):
             updated_button = "Desbanir"
             success = True
             user_url = f'/users_page/{user_id}'
+        
         except AlreadyBanned as e:
             # remove ban
             self.user.unban_user(int(user_id))
             updated_button = "Banir"
             success = True
             user_url = f'/users_page/{user_id}'
+        
         except InvalidUserException as e:
             # invalid user
             return self.users_page(int(user_id)) + '<p style="text-align: center;">Usuário inválido.</p>'
+        
         return json.dumps({'success': success, 'updated_button': updated_button, 'user_url': user_url})
 
+    # OLD VERSION OF get_post_comments
+    # @cherrypy.expose
+    # def get_post_comments(self, postId):
+    #     pattern = r'(?<==)([^=\s]+)' #The "postId" parameter is in the format "postId=8", so use regex to extract the 8
+    #     matches = re.findall(pattern, postId)
+    #     id = int(matches[0])
+    #     comments = self.model.get_comments_for_post(id)
+    #     if len(comments) > 0:
+    #         comments = [utils.transformReplyDataToObject(reply) for reply in comments]
+    #         comments.reverse()
+    #         return comments_to_html(comments, self.is_moderator)
+    #     else:
+    #         return comments_to_html([], self.is_moderator) + f'<p style="text-align: center;">Ainda não há comentários.</p>'
+    
+    # REFACTORED VERSION OF get_post_comments
     @cherrypy.expose
     def get_post_comments(self, postId):
-        pattern = r'(?<==)([^=\s]+)' #The "postId" parameter is in the format "postId=8", so use regex to extract the 8
-        matches = re.findall(pattern, postId)
-        id = int(matches[0])
-        comments = self.model.get_comments_for_post(id)
+        comments = rf.getComments(self.model, postId)
         if len(comments) > 0:
-            comments = [utils.transformReplyDataToObject(reply) for reply in comments]
-            comments.reverse()
+            comments = rf.getCommentsObjects(comments)
             return comments_to_html(comments, self.is_moderator)
         else:
             return comments_to_html([], self.is_moderator) + f'<p style="text-align: center;">Ainda não há comentários.</p>'
@@ -671,16 +686,12 @@ class BlogView(object):
     def do_like(self, post_id):
         try:
             self.user.like(post_id)
-            #return self.main_page().replace('''<input type="submit" value="Like">''','''<input type="submit" value="Unlike">''')
-            #updated_button = f'id="likeButton_{post_id}" value="Unlike"'
+            # like
             updated_button = "Unlike"
             success = True
         except Exception as e:
             # dislike
             self.user.unlike(post_id)
-            #updated_button = f'id="likeButton_{post_id}" value="Like"'
-            #return self.main_page()
-            #return self.main_page().replace(f'id="likeButton_{post_id}" value="Like"', updated_button)
             updated_button = "Like"
             success = True
         return json.dumps({'success': success, 'updated_button': updated_button})

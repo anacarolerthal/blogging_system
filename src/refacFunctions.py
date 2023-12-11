@@ -2,6 +2,7 @@ from utils import *
 from model import BlogModel
 from users import UserFactory
 from tags import Tag
+import re
 
 def getTaggedPosts(model: BlogModel, user_id: int = None) -> list:
     if user_id is None:
@@ -91,3 +92,21 @@ def createReplyWithPostID(user_id: int, post_id: int, content: str) -> Reply:
     )
     query_string = "post_id={}".format(post_id)
     return reply, query_string
+
+def getComments(model: BlogModel, post_id: int) -> list:
+    """
+    Returns a list of comments for a post.
+    """
+    pattern = r'(?<==)([^=\s]+)' #The "postId" parameter is in the format "postId=8", so use regex to extract the 8
+    matches = re.findall(pattern, post_id)
+    id = int(matches[0])
+    comments = model.get_comments_for_post(id)
+    return comments
+
+def getCommentsObjects(comments: list) -> list:
+    """
+    Returns a list of comment objects for a post.
+    """
+    comments_objects = [transformReplyDataToObject(comment) for comment in comments]
+    comments_objects.reverse()
+    return comments_objects
