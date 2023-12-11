@@ -282,7 +282,8 @@ def register():
         <input type="text" name="username" placeholder="Username">
         <input type="password" name="password" placeholder="Password">
         <input type="email" name="email" placeholder="Email">
-        <input type="checkbox" name="is_moderator" value=True> Moderador?
+        <label for="is_moderator">Moderador?</label>
+        <input type="checkbox" name="is_moderator" value="True">
         <input type="submit" value="Register">
     </form>
     <p style="text-align: center;">Já possui uma conta? Faça <a href="http://localhost:8080/">login</a>.</p>
@@ -333,9 +334,12 @@ class BlogView(object):
         self.posts = []
         self.model = BlogModel()
         self.user_id = None
+        self.user = None
 
     @cherrypy.expose
     def index(self):
+        if self.user is not None:
+            self.user.logout()
         return login()
 
     # OLD VERSION OF main_page
@@ -364,13 +368,16 @@ class BlogView(object):
     # REFACTORED VERSION OF main_page
     @cherrypy.expose
     def main_page(self):
-        tagged_posts = rf.getTaggedPosts(self.model)
-        self.posts = tagged_posts
-        
-        if self.is_moderator:
-            return moderator_post_to_html(self.posts)
-        elif not self.is_moderator:
-            return post_to_html(self.posts)
+        if self.user.is_logged_in():
+          tagged_posts = rf.getTaggedPosts(self.model)
+          self.posts = tagged_posts
+
+          if self.is_moderator:
+              return moderator_post_to_html(self.posts)
+          elif not self.is_moderator:
+              return post_to_html(self.posts)
+        else:
+            return login()
     
     # # OLD VERSION OF personal_page
     # @cherrypy.expose
@@ -401,17 +408,21 @@ class BlogView(object):
     # REFACTORED VERSION OF personal_page
     @cherrypy.expose
     def personal_page(self):
-        if self.user_id is None:
+        if self.user.is_logged_in():
+          tagged_user_posts = rf.getTaggedPosts(self.model, self.user_id)
+          # if user has no posts, display a message
+          if len(tagged_user_posts) == 0:
+              return personal_page_html(self.user, tagged_user_posts, self.user, self.is_moderator) + '<p style="text-align: center;">Você ainda não tem nenhuma postagem. Clique em <a href="http://localhost:8080/new_post">"Nova Postagem"</a> para começar a blogar!</p>'
+          return personal_page_html(self.user, tagged_user_posts, self.user, self.is_moderator)
+        else:
             return login()
-        tagged_user_posts = rf.getTaggedPosts(self.model, self.user_id)
-        # if user has no posts, display a message
-        if len(tagged_user_posts) == 0:
-            return personal_page_html(self.user, tagged_user_posts, self.user, self.is_moderator) + '<p style="text-align: center;">Você ainda não tem nenhuma postagem. Clique em <a href="http://localhost:8080/new_post">"Nova Postagem"</a> para começar a blogar!</p>'
-        return personal_page_html(self.user, tagged_user_posts, self.user, self.is_moderator)
 
     @cherrypy.expose
     def tags_filter(self):
-        return tag_search_html(self.is_moderator)
+        if self.user.is_logged_in():
+            return tag_search_html(self.is_moderator)
+        else:
+            return login()
     
     # OLD VERSION OF tag_search_result
     # @cherrypy.expose
@@ -444,11 +455,15 @@ class BlogView(object):
     # REFACTORED VERSION OF tag_search_result
     @cherrypy.expose
     def tag_search_result(self, tag):
+        if self.user.is_logged_in():
         # check if tag exists
-        if not self.model.check_if_tag_in_db(tag):
+          if not self.model.check_if_tag_in_db(tag):
             return tag_search_result_html([])
-        posts = rf.getPostsByPostID(self.model, tag)
-        return tag_search_result_html(posts, self.is_moderator)
+          posts = rf.getPostsByPostID(self.model, tag)
+          return tag_search_result_html(posts, self.is_moderator)
+        else:
+            return login()
+
 
     # OLD VERSION OF followers_page
     # @cherrypy.expose
@@ -468,10 +483,13 @@ class BlogView(object):
     # REFACTORED VERSION OF followers_page
     @cherrypy.expose
     def followers_page(self, user_id):
-        if self.user_id is None:
-           return login()
-        user, followers = rf.getUserFollowers(self.model, user_id)
-        return followers_page_html(user, followers)
+        #if self.user_id is None:
+        #    return login()
+        if self.user.is_logged_in():
+          user, followers = rf.getUserFollowers(self.model, user_id)
+          return followers_page_html(user, followers)
+        else:
+            return login()
 
     # OLD VERSION OF users_page
     # @cherrypy.expose
@@ -503,17 +521,23 @@ class BlogView(object):
     # REFACTORED VERSION OF users_page
     @cherrypy.expose
     def users_page(self, author_id):
-        username = self.model.get_username_by_user_id(int(author_id))
-        some_other_user = UserFactory().create_user("USER", username, author_id)
-        some_other_user.set_id(int(author_id))
-        tagged_user_posts = rf.getTaggedPosts(self.model, author_id)
-        return personal_page_html(some_other_user, tagged_user_posts, self.user, self.is_moderator)
+        if self.user.is_logged_in():
+          username = self.model.get_username_by_user_id(int(author_id))
+          some_other_user = UserFactory().create_user("USER", username, author_id)
+          some_other_user.set_id(int(author_id))
+          tagged_user_posts = rf.getTaggedPosts(self.model, author_id)
+          return personal_page_html(some_other_user, tagged_user_posts, self.user, self.is_moderator)           
+        else:
+            return login()
 
     @cherrypy.expose
     def new_post(self):
-        if self.user_id is None:
+        #if self.user_id is None:
+        #    return login()
+        if self.user.is_logged_in():
+            return new_post_to_html()
+        else:
             return login()
-        return new_post_to_html()
 
     # OLD VERSION OF create_post
     # @cherrypy.expose
@@ -544,10 +568,13 @@ class BlogView(object):
         """
         Create a post and return to the all posts page
         """
-        post_tags = rf.splitTags(tags)
-        post = rf.createPostWithSplitTags(self.user_id, title, content, post_tags)
-        post.publish()
-        return self.main_page()
+        if self.user.is_logged_in():
+            post_tags = rf.splitTags(tags)
+            post = rf.createPostWithSplitTags(self.user_id, title, content, post_tags)
+            post.publish()
+            return self.main_page()
+        else:
+            return login()
 
     #OLD VERSION OF is_authenticated
     @cherrypy.expose
@@ -564,6 +591,9 @@ class BlogView(object):
                 self.user = UserFactory().create_user("MODERATOR", username, user_id)
             elif not admin.is_moderator(username):
                 self.user = UserFactory().create_user("USER", username, user_id)
+                if (BlogModel().check_if_user_is_banned(user_id)):
+                    return login() + '<p style="color: red; text-align: center;">Você está banido.</p>'
+            self.user.login()
             self.user.set_id(user_id)
             self.user_id = self.user.get_id()
             return self.main_page()
@@ -595,58 +625,64 @@ class BlogView(object):
     # REFACTORED VERSION OF do_comment
     @cherrypy.expose
     def do_comment(self, content, post_id):
-        reply, query_string = rf.createReplyWithPostID(self.user_id, post_id, content)
-        reply.publish()
-        return self.get_post_comments(query_string)
-
+        if self.user.is_logged_in():
+            reply, query_string = rf.createReplyWithPostID(self.user_id, post_id, content)
+            reply.publish()
+            return self.get_post_comments(query_string)
+        else:
+            return login()
+          
     @cherrypy.expose
     def do_follow(self, user_id):
-        try:
-            self.user.follow(int(user_id))
-            updated_button = "Deixar de Seguir"
-            success = True
-            user_url = f'/users_page/{user_id}'
-        
-        except AlreadyFollowing as e:
-            # unfollow
-            self.user.unfollow(int(user_id))
-            updated_button = "Seguir"
-            success = True
-            user_url = f'/users_page/{user_id}'
-        
-        except FollowInvalidUser as e:
-            # invalid user
-            return self.users_page(int(user_id))
-        
-        except CannotFollowSelf as e:
-            # cannot follow self 
-            # add message to page
-            return self.users_page(int(user_id)) + '<p style="text-align: center;">Não é possível seguir a si mesmo.</p>'
-        
-        return json.dumps({'success': success, 'updated_button': updated_button, 'user_url': user_url})
+        if self.user.is_logged_in():
+            try:
+                self.user.follow(int(user_id))
+                # return to that user's page
+                #return self.users_page(int(user_id))
+                updated_button = "Deixar de Seguir"
+                success = True
+                user_url = f'/users_page/{user_id}'
+            except AlreadyFollowing as e:
+                # unfollow
+                #self.user.unfollow(int(user_id))
+                #return self.users_page(int(user_id))
+                self.user.unfollow(int(user_id))
+                updated_button = "Seguir"
+                success = True
+                user_url = f'/users_page/{user_id}'
+            except FollowInvalidUser as e:
+                # invalid user
+                return self.users_page(int(user_id))
+            except CannotFollowSelf as e:
+                # cannot follow self 
+                # add message to page
+                return self.users_page(int(user_id)) + '<p style="text-align: center;">Não é possível seguir a si mesmo.</p>'
+            return json.dumps({'success': success, 'updated_button': updated_button, 'user_url': user_url})
+        else:
+            return login()
     
     @cherrypy.expose
     def do_ban(self, user_id):
-        try:
-            # insert ban in database
-            self.user.ban_user(int(user_id))
-            updated_button = "Desbanir"
-            success = True
-            user_url = f'/users_page/{user_id}'
-        
-        except AlreadyBanned as e:
-            # remove ban
-            self.user.unban_user(int(user_id))
-            updated_button = "Banir"
-            success = True
-            user_url = f'/users_page/{user_id}'
-        
-        except InvalidUserException as e:
-            # invalid user
-            return self.users_page(int(user_id)) + '<p style="text-align: center;">Usuário inválido.</p>'
-        
-        return json.dumps({'success': success, 'updated_button': updated_button, 'user_url': user_url})
-
+        if self.user.is_logged_in():
+            try:
+                # insert ban in database
+                self.user.ban_user(int(user_id))
+                updated_button = "Desbanir"
+                success = True
+                user_url = f'/users_page/{user_id}'
+            except AlreadyBanned as e:
+                # remove ban
+                self.user.unban_user(int(user_id))
+                updated_button = "Banir"
+                success = True
+                user_url = f'/users_page/{user_id}'
+            except InvalidUserException as e:
+                # invalid user
+                return self.users_page(int(user_id)) + '<p style="text-align: center;">Usuário inválido.</p>'
+            return json.dumps({'success': success, 'updated_button': updated_button, 'user_url': user_url})
+        else:
+            return login()
+          
     # OLD VERSION OF get_post_comments
     # @cherrypy.expose
     # def get_post_comments(self, postId):
@@ -664,35 +700,44 @@ class BlogView(object):
     # REFACTORED VERSION OF get_post_comments
     @cherrypy.expose
     def get_post_comments(self, postId):
-        comments = rf.getComments(self.model, postId)
-        if len(comments) > 0:
-            comments = rf.getCommentsObjects(comments)
-            return comments_to_html(comments, self.is_moderator)
+        if self.user.is_logged_in():
+            comments = rf.getComments(self.model, postId)
+            if len(comments) > 0:
+                comments = rf.getCommentsObjects(comments)
+                return comments_to_html(comments, self.is_moderator)
+            else:
+                return comments_to_html([], self.is_moderator) + f'<p style="text-align: center;">Ainda não há comentários.</p>'
         else:
-            return comments_to_html([], self.is_moderator) + f'<p style="text-align: center;">Ainda não há comentários.</p>'
+            return login()
 
     @cherrypy.expose
     def do_like(self, post_id):
-        try:
-            self.user.like(post_id)
-            # like
-            updated_button = "Unlike"
-            success = True
-        except Exception as e:
-            # dislike
-            self.user.unlike(post_id)
-            updated_button = "Like"
-            success = True
-        return json.dumps({'success': success, 'updated_button': updated_button})
+        if self.user.is_logged_in():
+            try:
+                self.user.like(post_id)
+                # like
+                updated_button = "Unlike"
+                success = True
+            except Exception as e:
+                # dislike
+                self.user.unlike(post_id)
+                updated_button = "Like"
+                success = True
+            return json.dumps({'success': success, 'updated_button': updated_button})
+        else:
+            return login()
     
     @cherrypy.expose
     def delete_post(self, post_id):
-        try:
-            self.user.delete_post(post_id)
-            return self.main_page()
-        except InvalidPostException as e:
-            # invalid post
-            return self.main_page() + '<p style="text-align: center;">Post inválido.</p>'
+      if self.user.is_logged_in():
+            try:
+                self.user.delete_post(post_id)
+                return self.main_page()
+            except InvalidPostException as e:
+                # invalid post
+                return self.main_page() + '<p style="text-align: center;">Post inválido.</p>'
+      else:
+          return login()  
 
     @cherrypy.expose
     def is_registered(self, username=None, password=None, email=None, is_moderator=None):
