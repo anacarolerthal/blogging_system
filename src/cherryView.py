@@ -402,7 +402,7 @@ class BlogView(object):
     #         return personal_page_html(self.user, tagged_user_posts, self.user, self.is_moderator) + '<p style="text-align: center;">Você ainda não tem nenhuma postagem. Clique em <a href="http://localhost:8080/new_post">"Nova Postagem"</a> para começar a blogar!</p>'
     #     return personal_page_html(self.user, tagged_user_posts, self.user, self.is_moderator)
     
-    # REFACORED VERSION OF personal_page
+    # REFACTORED VERSION OF personal_page
     @cherrypy.expose
     def personal_page(self):
         if self.user_id is None:
@@ -417,32 +417,42 @@ class BlogView(object):
     def tags_filter(self):
         return tag_search_html(self.is_moderator)
     
+    # OLD VERSION OF tag_search_result
+    # @cherrypy.expose
+    # def tag_search_result(self, tag):
+    #     # check if tag exists
+    #     if not self.model.check_if_tag_in_db(tag):
+    #         return tag_search_result_html([])
+    #     # get tag id from tag name
+    #     tag_id = self.model.get_tag_id_by_name(tag)
+    #     post_ids = self.model.get_post_id_by_tag(tag_id)
+    #     # for each post id, get post data
+    #     posts = []
+    #     for post_id in post_ids:
+    #         posts.append(utils.transformPostDataToObject(self.model.get_post_by_post_id(post_id)))
+    #     tagged_posts =[]
+    #     # get post tags
+    #     for post in posts:
+    #         tag_ids = self.model.get_tags_for_post(post.id)
+    #         # get tag names from tag ids
+    #         tags = []
+    #         for tag_id in tag_ids:
+    #             if tag_id is not None:
+    #                 tags.append(self.model.get_tag_name_by_id(tag_id))
+    #         # add tags to post
+    #         post.tags = tags
+    #         tagged_posts.append(post)
+    #     tagged_posts.reverse()
+    #     return tag_search_result_html(tagged_posts, self.is_moderator)
+    
+    # REFACTORED VERSION OF tag_search_result
     @cherrypy.expose
     def tag_search_result(self, tag):
         # check if tag exists
         if not self.model.check_if_tag_in_db(tag):
             return tag_search_result_html([])
-        # get tag id from tag name
-        tag_id = self.model.get_tag_id_by_name(tag)
-        post_ids = self.model.get_post_id_by_tag(tag_id)
-        # for each post id, get post data
-        posts = []
-        for post_id in post_ids:
-            posts.append(utils.transformPostDataToObject(self.model.get_post_by_post_id(post_id)))
-        tagged_posts =[]
-        # get post tags
-        for post in posts:
-            tag_ids = self.model.get_tags_for_post(post.id)
-            # get tag names from tag ids
-            tags = []
-            for tag_id in tag_ids:
-                if tag_id is not None:
-                    tags.append(self.model.get_tag_name_by_id(tag_id))
-            # add tags to post
-            post.tags = tags
-            tagged_posts.append(post)
-        tagged_posts.reverse()
-        return tag_search_result_html(tagged_posts, self.is_moderator)
+        posts = rf.getPostsByPostID(self.model, tag)
+        return tag_search_result_html(posts, self.is_moderator)
 
     @cherrypy.expose
     def followers_page(self, user_id):
