@@ -42,15 +42,6 @@ class BaseUser(ABC):
         """Get the email of the user"""
         return self.email
 
-    # @abstractmethod
-    # def register(self, username: str, password: str, email: str) -> None:
-    #     """Register a user"""
-    #     pass
-
-    # @abstractmethod
-    # def login(self, username: str, password: str) -> bool:
-    #     """Login a user"""      
-    #     pass
 
 class User(BaseUser):
     """A user of the system
@@ -60,7 +51,7 @@ class User(BaseUser):
                  password: str = None,
                  email: str = None,
                  id: int = None,
-                 posts: List[int] = None, 
+                 posts: List[int] = None,
                  followers: List[int] = None,
                  following: List[int] = None):
         self.id = id
