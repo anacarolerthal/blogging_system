@@ -1,5 +1,6 @@
 from utils import *
 from model import BlogModel
+from users import UserFactory
 
 def getTaggedPosts(model: BlogModel, user_id: int = None) -> list:
     if user_id is None:
@@ -48,6 +49,9 @@ def getPostsByPostID(model: BlogModel, tag: str) -> list:
     tagged_posts.reverse()
     return tagged_posts
 
-
-        
-        
+def getUserAndFollowers(model: BlogModel, user_id: int) -> tuple:
+    username = model.get_username_by_id(user_id)
+    user = UserFactory().create_user("USER", username, user_id)
+    user.set_id(user_id)
+    followers = user.get_followers()
+    return user, followers

@@ -454,18 +454,27 @@ class BlogView(object):
         posts = rf.getPostsByPostID(self.model, tag)
         return tag_search_result_html(posts, self.is_moderator)
 
+    # OLD VERSION OF followers_page
+    # @cherrypy.expose
+    # def followers_page(self, user_id):
+    #     #if self.user_id is None:
+    #     #    return login()
+    #     username = self.model.get_username_by_user_id(int(user_id))
+    #     # create user object
+    #     user = User(
+    #         username=username
+    #     )
+    #     user.set_id(int(user_id))
+    #     # get user followers
+    #     followers = user.get_followers()
+    #     return followers_page_html(user, followers)
+    
+    # REFACTORED VERSION OF followers_page
     @cherrypy.expose
     def followers_page(self, user_id):
-        #if self.user_id is None:
-        #    return login()
-        username = self.model.get_username_by_user_id(int(user_id))
-        # create user object
-        user = User(
-            username=username
-        )
-        user.set_id(int(user_id))
-        # get user followers
-        followers = user.get_followers()
+        if self.user_id is None:
+           return login()
+        user, followers = rf.getUserFollowers(self.model, user_id)
         return followers_page_html(user, followers)
 
     @cherrypy.expose
