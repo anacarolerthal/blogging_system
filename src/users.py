@@ -24,7 +24,6 @@ class BaseUser(ABC):
         self.password = password
         self.email = email
 
-
     def set_id(self, user_id) -> None:
         if type(user_id) != int:
             raise TypeError("Tipo inválido de id. Ids devem ser inteiros.")
@@ -41,16 +40,6 @@ class BaseUser(ABC):
     def get_email(self) -> str:
         """Get the email of the user"""
         return self.email
-
-    # @abstractmethod
-    # def register(self, username: str, password: str, email: str) -> None:
-    #     """Register a user"""
-    #     pass
-
-    # @abstractmethod
-    # def login(self, username: str, password: str) -> bool:
-    #     """Login a user"""      
-    #     pass
 
 class User(BaseUser):
     """A user of the system

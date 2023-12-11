@@ -5,6 +5,7 @@ from users import User, Moderator, UserFactory
 from tags import Tag
 from model import BlogModel
 from customExceptions import *
+import refacFunctions as rf
 import utils
 import re
 import os
@@ -341,48 +342,72 @@ class BlogView(object):
     def index(self):
         return login()
 
+    # OLD VERSION OF main_page
+    # @cherrypy.expose
+    # def main_page(self):
+    #     posts = [utils.transformPostDataToObject(post) for post in self.model.get_all_posts()]
+    #     # get post tags
+    #     tagged_posts =[]
+    #     for post in posts:
+    #         tag_ids = self.model.get_tags_for_post(post.id)
+    #         # get tag names from tag ids
+    #         tags = []
+    #         for tag_id in tag_ids:
+    #             if tag_id is not None:
+    #                 tags.append(self.model.get_tag_name_by_id(tag_id))
+    #         # add tags to post
+    #         post.tags = tags
+    #         tagged_posts.append(post)
+    #     tagged_posts.reverse()
+    #     self.posts = tagged_posts
+    #     if self.is_moderator:
+    #         return moderator_post_to_html(self.posts)
+    #     elif not self.is_moderator:
+    #         return post_to_html(self.posts)
+    
+    # REFACTORED VERSION OF main_page
     @cherrypy.expose
     def main_page(self):
-        posts = [utils.transformPostDataToObject(post) for post in self.model.get_all_posts()]
-        # get post tags
-        tagged_posts =[]
-        for post in posts:
-            tag_ids = self.model.get_tags_for_post(post.id)
-            # get tag names from tag ids
-            tags = []
-            for tag_id in tag_ids:
-                if tag_id is not None:
-                    tags.append(self.model.get_tag_name_by_id(tag_id))
-            # add tags to post
-            post.tags = tags
-            tagged_posts.append(post)
-        tagged_posts.reverse()
+        tagged_posts = rf.getTaggedPosts(self.model)
         self.posts = tagged_posts
+        
         if self.is_moderator:
             return moderator_post_to_html(self.posts)
         elif not self.is_moderator:
             return post_to_html(self.posts)
     
+    # # OLD VERSION OF personal_page
+    # @cherrypy.expose
+    # def personal_page(self):
+    #     if self.user_id is None:
+    #         return login()
+    #     # get user posts
+    #     user_posts = [utils.transformPostDataToObject(post) for post in self.model.get_posts_for_user(self.user_id)]
+    #     tagged_user_posts =[]
+    #     # get post tags
+    #     for post in user_posts:
+    #         tag_ids = self.model.get_tags_for_post(post.id)
+    #         # get tag names from tag ids
+    #         tags = []
+    #         for tag_id in tag_ids:
+    #             if tag_id is not None:
+    #                 tags.append(self.model.get_tag_name_by_id(tag_id))
+    #         # add tags to post
+    #         post.tags = tags
+    #         tagged_user_posts.append(post)
+    #     tagged_user_posts.reverse()
+        
+    #     # if user has no posts, display a message
+    #     if len(tagged_user_posts) == 0:
+    #         return personal_page_html(self.user, tagged_user_posts, self.user, self.is_moderator) + '<p style="text-align: center;">Você ainda não tem nenhuma postagem. Clique em <a href="http://localhost:8080/new_post">"Nova Postagem"</a> para começar a blogar!</p>'
+    #     return personal_page_html(self.user, tagged_user_posts, self.user, self.is_moderator)
+    
+    # REFACORED VERSION OF personal_page
     @cherrypy.expose
     def personal_page(self):
         if self.user_id is None:
             return login()
-        # get user posts
-        user_posts = [utils.transformPostDataToObject(post) for post in self.model.get_posts_for_user(self.user_id)]
-        tagged_user_posts =[]
-        # get post tags
-        for post in user_posts:
-            tag_ids = self.model.get_tags_for_post(post.id)
-            # get tag names from tag ids
-            tags = []
-            for tag_id in tag_ids:
-                if tag_id is not None:
-                    tags.append(self.model.get_tag_name_by_id(tag_id))
-            # add tags to post
-            post.tags = tags
-            tagged_user_posts.append(post)
-        tagged_user_posts.reverse()
-        
+        tagged_user_posts = rf.getTaggedPosts(self.model, self.user_id)
         # if user has no posts, display a message
         if len(tagged_user_posts) == 0:
             return personal_page_html(self.user, tagged_user_posts, self.user, self.is_moderator) + '<p style="text-align: center;">Você ainda não tem nenhuma postagem. Clique em <a href="http://localhost:8080/new_post">"Nova Postagem"</a> para começar a blogar!</p>'
