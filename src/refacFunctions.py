@@ -1,6 +1,7 @@
 from utils import *
 from model import BlogModel
 from users import UserFactory
+from tags import Tag
 
 def getTaggedPosts(model: BlogModel, user_id: int = None) -> list:
     if user_id is None:
@@ -55,3 +56,26 @@ def getUserAndFollowers(model: BlogModel, user_id: int) -> tuple:
     user.set_id(user_id)
     followers = user.get_followers()
     return user, followers
+
+def splitTags(tags: str) -> list:
+    """
+    Returns a list of tags from a string of tags.
+    """
+    post_tags = []
+    for tag in tags.split():
+        tg = Tag(tag_name=tag)
+        tg.publish()
+        post_tags.append(tag)
+    return post_tags
+
+def createPostWithSplitTags(user_id: int, title: str, content: str, post_tags: list) -> Post:
+    """
+    Creates a post with tags from a string of tags.
+    """
+    post = Post(
+        author_id=user_id,
+        title=title,
+        content=content,
+        tags=post_tags
+    )
+    return post
