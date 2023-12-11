@@ -347,6 +347,9 @@ class DeletePostCommand(DBCommand):
         self.post_id = post_id
 
     def execute(self):
+        self.cursor.execute('DELETE FROM postlikes WHERE post_id = %s', (self.post_id,))
+        self.cursor.execute('DELETE FROM posttag WHERE post_id = %s', (self.post_id,))
+        self.cursor.execute('DELETE FROM reply WHERE parent_post_id = %s', (self.post_id,))
         self.cursor.execute('DELETE FROM post WHERE id = %s', (self.post_id,))
         self.connection.commit()
 
