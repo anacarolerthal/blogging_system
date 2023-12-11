@@ -8,7 +8,7 @@ DATABASE_URL = "postgres://wxishrvi:2bKsBjBn5-hrqFKFb79grU1Kl71n9ext@isabelle.db
 # #user postgres, password admin, database blogdb
 # DATABASE_URL = "postgres://postgres:admin@localhost:5432/blogdb"
 
-@Singleton #Decorator pattern
+@Singleton 
 class DBConnection():
     def __init__(self):
         self.connection = psycopg2.connect(DATABASE_URL)
