@@ -122,15 +122,16 @@ class User(BaseUser):
         self.__following = [user for user in following_list]
         return self.__following
 
-    def get_liked_posts(self) -> List[int]:
-        """Get the liked posts of the user
+    #  CODE SMELL
+    # def get_liked_posts(self) -> List[int]:
+    #     """Get the liked posts of the user
 
-        Returns:
-        liked_posts: List[int] -> list of the liked posts of the user
-        """
-        id_self = self.get_id()
-        liked_posts = BlogModel().get_all_liked_posts_by_user(id_self)
-        return liked_posts
+    #     Returns:
+    #     liked_posts: List[int] -> list of the liked posts of the user
+    #     """
+    #     id_self = self.get_id()
+    #     liked_posts = BlogModel().get_all_liked_posts_by_user(id_self)
+    #     return liked_posts
 
     def like(self, post_id: int) -> None:
         """Like a post
