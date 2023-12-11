@@ -44,12 +44,10 @@ Os diagramas de sequência para as principais funcionalidades estão presentes n
 #### Filtrar por Tag
 ![sequencia-diagram](./docs/sequences-diagram/filter_by_tag.png)
 
-## Diagrama de pacotes
-
 ## Desenvolvimento
 
 ### Demo
-Os vídeos demo da aplicação funcionando podem ser encontrado [aqui](url_para_o_video_usuario) (escopo usuário) e [aqui](url_para_o_video_usuario_2) escopo moderador.
+O vídeo demo da aplicação funcionando podem ser encontrado [aqui](https://drive.google.com/file/d/1HLhy0SrlRKPupGwsFLUQEkL-UdhIl3UQ/view?usp=sharing).
 
 ### Interface
 A biblioteca utilizada foi o [CherryPy](https://docs.cherrypy.dev/en/latest/), um framework da web usado para criar aplicativos da web. Sua escolha foi devido a facilidade de mapear URL`s a funções.
