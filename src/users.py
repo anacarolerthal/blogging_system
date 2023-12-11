@@ -26,7 +26,6 @@ class BaseUser(ABC):
         self.password = password
         self.email = email
 
-
     def set_id(self, user_id) -> None:
         """Set the id of the user
 
@@ -58,12 +57,11 @@ class BaseUser(ABC):
 
     def get_email(self) -> str:
         """Get the email of the user
-
+        
         Returns:
         self.email: str -> email of the user
         """
         return self.email
-
 
 class User(BaseUser):
     """A user of the system

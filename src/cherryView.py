@@ -1,12 +1,9 @@
 import cherrypy
 from admin import Admin
-from content import Post, Reply
-from users import User, Moderator, UserFactory
-from tags import Tag
+from users import UserFactory
 from model import BlogModel
 from customExceptions import *
-import utils
-import re
+import refacFunctions as rf
 import os
 import json
 
@@ -345,56 +342,78 @@ class BlogView(object):
             self.user.logout()
         return login()
 
+    # OLD VERSION OF main_page
+    # @cherrypy.expose
+    # def main_page(self):
+    #     posts = [utils.transformPostDataToObject(post) for post in self.model.get_all_posts()]
+    #     # get post tags
+    #     tagged_posts =[]
+    #     for post in posts:
+    #         tag_ids = self.model.get_tags_for_post(post.id)
+    #         # get tag names from tag ids
+    #         tags = []
+    #         for tag_id in tag_ids:
+    #             if tag_id is not None:
+    #                 tags.append(self.model.get_tag_name_by_id(tag_id))
+    #         # add tags to post
+    #         post.tags = tags
+    #         tagged_posts.append(post)
+    #     tagged_posts.reverse()
+    #     self.posts = tagged_posts
+    #     if self.is_moderator:
+    #         return moderator_post_to_html(self.posts)
+    #     elif not self.is_moderator:
+    #         return post_to_html(self.posts)
+    
+    # REFACTORED VERSION OF main_page
     @cherrypy.expose
     def main_page(self):
         if self.user.is_logged_in():
-            posts = [utils.transformPostDataToObject(post) for post in self.model.get_all_posts()]
-            # get post tags
-            tagged_posts =[]
-            for post in posts:
-                tag_ids = self.model.get_tags_for_post(post.id)
-                # get tag names from tag ids
-                tags = []
-                for tag_id in tag_ids:
-                    if tag_id is not None:
-                        tags.append(self.model.get_tag_name_by_id(tag_id))
-                # add tags to post
-                post.tags = tags
-                tagged_posts.append(post)
-            tagged_posts.reverse()
-            self.posts = tagged_posts
-            if self.is_moderator:
-                return moderator_post_to_html(self.posts)
-            elif not self.is_moderator:
-                return post_to_html(self.posts)
+          tagged_posts = rf.getTaggedPosts(self.model)
+          self.posts = tagged_posts
+
+          if self.is_moderator:
+              return moderator_post_to_html(self.posts)
+          elif not self.is_moderator:
+              return post_to_html(self.posts)
         else:
             return login()
     
+    # # OLD VERSION OF personal_page
+    # @cherrypy.expose
+    # def personal_page(self):
+    #     if self.user_id is None:
+    #         return login()
+    #     # get user posts
+    #     user_posts = [utils.transformPostDataToObject(post) for post in self.model.get_posts_for_user(self.user_id)]
+    #     tagged_user_posts =[]
+    #     # get post tags
+    #     for post in user_posts:
+    #         tag_ids = self.model.get_tags_for_post(post.id)
+    #         # get tag names from tag ids
+    #         tags = []
+    #         for tag_id in tag_ids:
+    #             if tag_id is not None:
+    #                 tags.append(self.model.get_tag_name_by_id(tag_id))
+    #         # add tags to post
+    #         post.tags = tags
+    #         tagged_user_posts.append(post)
+    #     tagged_user_posts.reverse()
+        
+    #     # if user has no posts, display a message
+    #     if len(tagged_user_posts) == 0:
+    #         return personal_page_html(self.user, tagged_user_posts, self.user, self.is_moderator) + '<p style="text-align: center;">Você ainda não tem nenhuma postagem. Clique em <a href="http://localhost:8080/new_post">"Nova Postagem"</a> para começar a blogar!</p>'
+    #     return personal_page_html(self.user, tagged_user_posts, self.user, self.is_moderator)
+    
+    # REFACTORED VERSION OF personal_page
     @cherrypy.expose
     def personal_page(self):
         if self.user.is_logged_in():
-            #if self.user_id is None:
-            #return login()
-            # get user posts
-            user_posts = [utils.transformPostDataToObject(post) for post in self.model.get_posts_for_user(self.user_id)]
-            tagged_user_posts =[]
-            # get post tags
-            for post in user_posts:
-                tag_ids = self.model.get_tags_for_post(post.id)
-                # get tag names from tag ids
-                tags = []
-                for tag_id in tag_ids:
-                    if tag_id is not None:
-                        tags.append(self.model.get_tag_name_by_id(tag_id))
-                # add tags to post
-                post.tags = tags
-                tagged_user_posts.append(post)
-            tagged_user_posts.reverse()
-            
-            # if user has no posts, display a message
-            if len(tagged_user_posts) == 0:
-                return personal_page_html(self.user, tagged_user_posts, self.user, self.is_moderator) + '<p style="text-align: center;">Você ainda não tem nenhuma postagem. Clique em <a href="http://localhost:8080/new_post">"Nova Postagem"</a> para começar a blogar!</p>'
-            return personal_page_html(self.user, tagged_user_posts, self.user, self.is_moderator)
+          tagged_user_posts = rf.getTaggedPosts(self.model, self.user_id)
+          # if user has no posts, display a message
+          if len(tagged_user_posts) == 0:
+              return personal_page_html(self.user, tagged_user_posts, self.user, self.is_moderator) + '<p style="text-align: center;">Você ainda não tem nenhuma postagem. Clique em <a href="http://localhost:8080/new_post">"Nova Postagem"</a> para começar a blogar!</p>'
+          return personal_page_html(self.user, tagged_user_posts, self.user, self.is_moderator)
         else:
             return login()
 
@@ -405,79 +424,109 @@ class BlogView(object):
         else:
             return login()
     
+    # OLD VERSION OF tag_search_result
+    # @cherrypy.expose
+    # def tag_search_result(self, tag):
+    #     # check if tag exists
+    #     if not self.model.check_if_tag_in_db(tag):
+    #         return tag_search_result_html([])
+    #     # get tag id from tag name
+    #     tag_id = self.model.get_tag_id_by_name(tag)
+    #     post_ids = self.model.get_post_id_by_tag(tag_id)
+    #     # for each post id, get post data
+    #     posts = []
+    #     for post_id in post_ids:
+    #         posts.append(utils.transformPostDataToObject(self.model.get_post_by_post_id(post_id)))
+    #     tagged_posts =[]
+    #     # get post tags
+    #     for post in posts:
+    #         tag_ids = self.model.get_tags_for_post(post.id)
+    #         # get tag names from tag ids
+    #         tags = []
+    #         for tag_id in tag_ids:
+    #             if tag_id is not None:
+    #                 tags.append(self.model.get_tag_name_by_id(tag_id))
+    #         # add tags to post
+    #         post.tags = tags
+    #         tagged_posts.append(post)
+    #     tagged_posts.reverse()
+    #     return tag_search_result_html(tagged_posts, self.is_moderator)
+    
+    # REFACTORED VERSION OF tag_search_result
     @cherrypy.expose
     def tag_search_result(self, tag):
         if self.user.is_logged_in():
         # check if tag exists
-            if not self.model.check_if_tag_in_db(tag):
-                return tag_search_result_html([])
-            # get tag id from tag name
-            tag_id = self.model.get_tag_id_by_name(tag)
-            post_ids = self.model.get_post_id_by_tag(tag_id)
-            # for each post id, get post data
-            posts = []
-            for post_id in post_ids:
-                posts.append(utils.transformPostDataToObject(self.model.get_post_by_post_id(post_id)))
-            tagged_posts =[]
-            # get post tags
-            for post in posts:
-                tag_ids = self.model.get_tags_for_post(post.id)
-                # get tag names from tag ids
-                tags = []
-                for tag_id in tag_ids:
-                    if tag_id is not None:
-                        tags.append(self.model.get_tag_name_by_id(tag_id))
-                # add tags to post
-                post.tags = tags
-                tagged_posts.append(post)
-            tagged_posts.reverse()
-            return tag_search_result_html(tagged_posts, self.is_moderator)
+          if not self.model.check_if_tag_in_db(tag):
+            return tag_search_result_html([])
+          posts = rf.getPostsByPostID(self.model, tag)
+          return tag_search_result_html(posts, self.is_moderator)
         else:
             return login()
 
+
+    # OLD VERSION OF followers_page
+    # @cherrypy.expose
+    # def followers_page(self, user_id):
+    #     #if self.user_id is None:
+    #     #    return login()
+    #     username = self.model.get_username_by_user_id(int(user_id))
+    #     # create user object
+    #     user = User(
+    #         username=username
+    #     )
+    #     user.set_id(int(user_id))
+    #     # get user followers
+    #     followers = user.get_followers()
+    #     return followers_page_html(user, followers)
+    
+    # REFACTORED VERSION OF followers_page
     @cherrypy.expose
     def followers_page(self, user_id):
         #if self.user_id is None:
         #    return login()
         if self.user.is_logged_in():
-            username = self.model.get_username_by_user_id(int(user_id))
-            # create user object
-            user = User(
-                username=username
-            )
-            user.set_id(int(user_id))
-            # get user followers
-            followers = user.get_followers()
-            return followers_page_html(user, followers)
+          user, followers = rf.getUserFollowers(self.model, user_id)
+          return followers_page_html(user, followers)
         else:
             return login()
 
+    # OLD VERSION OF users_page
+    # @cherrypy.expose
+    # def users_page(self, author_id):
+    #     username = self.model.get_username_by_user_id(int(author_id))
+    #     # create user object
+    #     # some_other_user = User(
+    #     #     username=username
+    #     # )
+    #     some_other_user = UserFactory().create_user("USER", username, author_id)
+    #     some_other_user.set_id(int(author_id))
+    #     # get user posts
+    #     user_posts = [utils.transformPostDataToObject(post) for post in self.model.get_posts_for_user(author_id)]
+    #     tagged_user_posts =[]
+    #     # get post tags
+    #     for post in user_posts:
+    #         tag_ids = self.model.get_tags_for_post(post.id)
+    #         # get tag names from tag ids
+    #         tags = []
+    #         for tag_id in tag_ids:
+    #             if tag_id is not None:
+    #                 tags.append(self.model.get_tag_name_by_id(tag_id))
+    #         # add tags to post
+    #         post.tags = tags
+    #         tagged_user_posts.append(post)
+    #     tagged_user_posts.reverse()
+    #     return personal_page_html(some_other_user, tagged_user_posts, self.user, self.is_moderator)
+    
+    # REFACTORED VERSION OF users_page
     @cherrypy.expose
     def users_page(self, author_id):
         if self.user.is_logged_in():
-            username = self.model.get_username_by_user_id(int(author_id))
-            # create user object
-            # some_other_user = User(
-            #     username=username
-            # )
-            some_other_user = UserFactory().create_user("USER", username, author_id)
-            some_other_user.set_id(int(author_id))
-            # get user posts
-            user_posts = [utils.transformPostDataToObject(post) for post in self.model.get_posts_for_user(author_id)]
-            tagged_user_posts =[]
-            # get post tags
-            for post in user_posts:
-                tag_ids = self.model.get_tags_for_post(post.id)
-                # get tag names from tag ids
-                tags = []
-                for tag_id in tag_ids:
-                    if tag_id is not None:
-                        tags.append(self.model.get_tag_name_by_id(tag_id))
-                # add tags to post
-                post.tags = tags
-                tagged_user_posts.append(post)
-            tagged_user_posts.reverse()
-            return personal_page_html(some_other_user, tagged_user_posts, self.user, self.is_moderator)
+          username = self.model.get_username_by_user_id(int(author_id))
+          some_other_user = UserFactory().create_user("USER", username, author_id)
+          some_other_user.set_id(int(author_id))
+          tagged_user_posts = rf.getTaggedPosts(self.model, author_id)
+          return personal_page_html(some_other_user, tagged_user_posts, self.user, self.is_moderator)           
         else:
             return login()
 
@@ -490,31 +539,44 @@ class BlogView(object):
         else:
             return login()
 
+    # OLD VERSION OF create_post
+    # @cherrypy.expose
+    # def create_post(self, title, content, tags):
+    #     """
+    #     Create a post and return to the all posts page
+    #     """
+    #     post_tags = []
+    #     # for each word in tags, create a tag object and publish it
+    #     for tag in tags.split():
+    #         tg = Tag(tag_name=tag)
+    #         tg.publish()
+    #         post_tags.append(tag)
+
+    #     post = Post(
+    #         author_id=self.user_id,
+    #         title=title,
+    #         content=content,
+    #         tags=post_tags
+    #     )
+
+    #     post.publish()
+    #     return self.main_page()
+
+    # REFACTORED VERSION OF create_post
     @cherrypy.expose
     def create_post(self, title, content, tags):
         """
         Create a post and return to the all posts page
         """
         if self.user.is_logged_in():
-            post_tags = []
-            # for each word in tags, create a tag object and publish it
-            for tag in tags.split():
-                tg = Tag(tag_name=tag)
-                tg.publish()
-                post_tags.append(tag)
-
-            post = Post(
-                author_id=self.user_id,
-                title=title,
-                content=content,
-                tags=post_tags
-            )
-
+            post_tags = rf.splitTags(tags)
+            post = rf.createPostWithSplitTags(self.user_id, title, content, post_tags)
             post.publish()
             return self.main_page()
         else:
             return login()
 
+    #OLD VERSION OF is_authenticated
     @cherrypy.expose
     def is_authenticated(self, username=None, password=None):
         '''
@@ -540,7 +602,7 @@ class BlogView(object):
             error_message = "Invalid username or password. Please try again."
             login_form = login() + f'<p style="color: red; text-align:center;">{error_message}</p>'
             return login_form
-
+    
     @cherrypy.expose
     def registering(self):
         '''
@@ -548,20 +610,28 @@ class BlogView(object):
         '''
         return register()
 
+    # OLD VERSION OF do_reply
+    # @cherrypy.expose
+    # def do_comment(self, content, post_id):
+    #     reply = Reply(
+    #         author_id=self.user_id,
+    #         content=content,
+    #         parent_post_id=post_id
+    #     )
+    #     query_string = "postId="+post_id
+    #     id = reply.publish()
+    #     return self.get_post_comments(query_string)
+    
+    # REFACTORED VERSION OF do_comment
     @cherrypy.expose
     def do_comment(self, content, post_id):
         if self.user.is_logged_in():
-            reply = Reply(
-                author_id=self.user_id,
-                content=content,
-                parent_post_id=post_id
-            )
-            query_string = "postId="+post_id
-            id = reply.publish()
+            reply, query_string = rf.createReplyWithPostID(self.user_id, post_id, content)
+            reply.publish()
             return self.get_post_comments(query_string)
         else:
             return login()
-
+          
     @cherrypy.expose
     def do_follow(self, user_id):
         if self.user.is_logged_in():
@@ -612,17 +682,28 @@ class BlogView(object):
             return json.dumps({'success': success, 'updated_button': updated_button, 'user_url': user_url})
         else:
             return login()
-
+          
+    # OLD VERSION OF get_post_comments
+    # @cherrypy.expose
+    # def get_post_comments(self, postId):
+    #     pattern = r'(?<==)([^=\s]+)' #The "postId" parameter is in the format "postId=8", so use regex to extract the 8
+    #     matches = re.findall(pattern, postId)
+    #     id = int(matches[0])
+    #     comments = self.model.get_comments_for_post(id)
+    #     if len(comments) > 0:
+    #         comments = [utils.transformReplyDataToObject(reply) for reply in comments]
+    #         comments.reverse()
+    #         return comments_to_html(comments, self.is_moderator)
+    #     else:
+    #         return comments_to_html([], self.is_moderator) + f'<p style="text-align: center;">Ainda não há comentários.</p>'
+    
+    # REFACTORED VERSION OF get_post_comments
     @cherrypy.expose
     def get_post_comments(self, postId):
         if self.user.is_logged_in():
-            pattern = r'(?<==)([^=\s]+)' #The "postId" parameter is in the format "postId=8", so use regex to extract the 8
-            matches = re.findall(pattern, postId)
-            id = int(matches[0])
-            comments = self.model.get_comments_for_post(id)
+            comments = rf.getComments(self.model, postId)
             if len(comments) > 0:
-                comments = [utils.transformReplyDataToObject(reply) for reply in comments]
-                comments.reverse()
+                comments = rf.getCommentsObjects(comments)
                 return comments_to_html(comments, self.is_moderator)
             else:
                 return comments_to_html([], self.is_moderator) + f'<p style="text-align: center;">Ainda não há comentários.</p>'
@@ -634,16 +715,12 @@ class BlogView(object):
         if self.user.is_logged_in():
             try:
                 self.user.like(post_id)
-                #return self.main_page().replace('''<input type="submit" value="Like">''','''<input type="submit" value="Unlike">''')
-                #updated_button = f'id="likeButton_{post_id}" value="Unlike"'
+                # like
                 updated_button = "Unlike"
                 success = True
             except Exception as e:
                 # dislike
                 self.user.unlike(post_id)
-                #updated_button = f'id="likeButton_{post_id}" value="Like"'
-                #return self.main_page()
-                #return self.main_page().replace(f'id="likeButton_{post_id}" value="Like"', updated_button)
                 updated_button = "Like"
                 success = True
             return json.dumps({'success': success, 'updated_button': updated_button})
