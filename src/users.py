@@ -13,10 +13,11 @@ setup_follow_event(listener)
 class BaseUser(ABC):
     """Abstract class for a user
 
+    Attributes:
+    id: int -> id of the user
     username: str -> username of the user
     password: str -> password of the user
     email: str -> email of the user
-    user_id: int -> id of the user
     """
     def __init__(self, username: str, password: str = None, email: str = None, id: int = None):
         self.id = id
@@ -26,20 +27,39 @@ class BaseUser(ABC):
 
 
     def set_id(self, user_id) -> None:
+        """Set the id of the user
+
+        Args:
+        user_id: int -> id of the user
+
+        Raises:
+        TypeError -> if the type of id is not int
+        """
         if type(user_id) != int:
             raise TypeError("Tipo inválido de id. Ids devem ser inteiros.")
         self.id = user_id
 
     def get_id(self) -> int:
-        """Get the id of the user"""
+        """Get the id of the user
+
+        Returns:
+        int -> id of the user"""
         return self.id
 
     def get_username(self) -> str:
-        """Get the username of the user"""
+        """Get the username of the user
+
+        Returns:
+        str -> username of the user
+        """
         return self.username
 
     def get_email(self) -> str:
-        """Get the email of the user"""
+        """Get the email of the user
+
+        Returns:
+        str -> email of the user
+        """
         return self.email
 
 
